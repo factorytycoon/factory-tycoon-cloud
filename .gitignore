@@ -1,0 +1,14 @@
+#Terraform
+.terraform/
+terraform.tfstate
+terraform.tfstate.backup
+*.tfstate*
+*.tfstate
+*.tfstate.backup
+crash.log
+tfplan
+
+# OS / Editor
+.DS_Store
+*.swp
+*.swo
