@@ -1,4 +1,4 @@
-# VPC 정보를 S3 Remote State에서 가져오기
+# VPC 정보를 S3 Remote State에서 읽어옵니다.
 data "terraform_remote_state" "vpc" {
   backend = "s3"
   config = {
