@@ -19,6 +19,10 @@ for module in "${MODULES[@]}"; do
   
   cd "$module"
   
+  # terraform init
+  echo "→ terraform init"
+  terraform init
+  
   # terraform destroy
   echo "→ terraform destroy"
   terraform destroy -auto-approve
