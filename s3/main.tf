@@ -2,6 +2,7 @@
 # 1. S3 버킷 - Terraform State 저장
 resource "aws_s3_bucket" "terraform_state" {
   bucket = var.bucket_name
+  force_destroy = true  # destroy 시 버킷 내 모든 객체 자동 삭제
 
   tags = {
     Name    = var.bucket_name
