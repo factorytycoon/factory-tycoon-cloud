@@ -1,3 +1,5 @@
+# EKS Cluster
+
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "~> 20.0"
@@ -13,9 +15,9 @@ module "eks" {
   enable_irsa = true
 
   cluster_addons = {
-    coredns   = { most_recent = true }
+    coredns    = { most_recent = true }
     kube-proxy = { most_recent = true }
-    vpc-cni   = { most_recent = true }
+    vpc-cni    = { most_recent = true }
   }
 
   eks_managed_node_groups = {
@@ -43,6 +45,9 @@ module "eks" {
   enable_cluster_creator_admin_permissions = true
 }
 
+
+# IAM Policy for ALB Controller (AWS 공식 정책 다운로드)
+
 data "http" "alb_iam_policy" {
   url = "https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/v2.6.2/docs/install/iam_policy.json"
 }
@@ -51,6 +56,9 @@ resource "aws_iam_policy" "alb_controller" {
   name   = "AWSLoadBalancerControllerIAMPolicy"
   policy = data.http.alb_iam_policy.body
 }
+
+
+# IRSA for AWS Load Balancer Controller
 
 module "alb_irsa" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
@@ -68,31 +76,34 @@ module "alb_irsa" {
   }
 }
 
-module "aws_lb_controller" {
-  source  = "terraform-aws-modules/helm/aws"
-  version = "~> 1.0"
 
-  cluster_name           = module.eks.cluster_name
-  cluster_endpoint       = module.eks.cluster_endpoint
-  cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
+# Helm — AWS Load Balancer Controller 설치
 
-  chart      = "aws-load-balancer-controller"
+resource "helm_release" "aws_lb_controller" {
+  provider   = helm.eks
   name       = "aws-load-balancer-controller"
-  namespace  = "kube-system"
   repository = "https://aws.github.io/eks-charts"
+  chart      = "aws-load-balancer-controller"
+  version    = "1.7.1"
+  namespace  = "kube-system"
+
+  depends_on = [
+    module.eks,
+    module.alb_irsa
+  ]
 
   values = [
-    yamlencode({
-      clusterName = module.eks.cluster_name
-      region      = var.aws_region
-      vpcId       = var.vpc_id
-      serviceAccount = {
-        create = true
-        name   = "aws-load-balancer-controller"
-        annotations = {
-          "eks.amazonaws.com/role-arn" = module.alb_irsa.iam_role_arn
-        }
+  yamlencode({
+    clusterName = module.eks.cluster_name
+    region      = var.aws_region
+    vpcId       = var.vpc_id
+
+    serviceAccount = {
+      create = true
+      annotations = {
+        "eks.amazonaws.com/role-arn" = module.alb_irsa.iam_role_arn
       }
-    })
-  ]
+    }
+  })
+]
 }
