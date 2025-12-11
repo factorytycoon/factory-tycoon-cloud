@@ -54,7 +54,7 @@ data "http" "alb_iam_policy" {
 
 resource "aws_iam_policy" "alb_controller" {
   name   = "AWSLoadBalancerControllerIAMPolicy"
-  policy = data.http.alb_iam_policy.body
+  policy = data.http.alb_iam_policy.response_body
 }
 
 
