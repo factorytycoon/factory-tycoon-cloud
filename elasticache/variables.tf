@@ -29,14 +29,14 @@ variable "redis_num_cache_nodes" {
 
 variable "redis_engine_version" {
   type    = string
-  default = "7.0"
-  description = "Redis 엔진 버전"
+  default = "7.2"
+  description = "Valkey 엔진 버전 (7.2+)"
 }
 
 variable "redis_parameter_group_family" {
   type    = string
-  default = "redis7"
-  description = "Redis 파라미터 그룹 패밀리"
+  default = "valkey7"
+  description = "Valkey 파라미터 그룹 패밀리"
 }
 
 variable "redis_port" {

@@ -64,11 +64,11 @@ resource "aws_elasticache_parameter_group" "redis" {
   )
 }
 
-# 4. Redis Replication Group (Cluster Mode Disabled)
+# 4. Valkey Replication Group (Cluster Mode Disabled)
 resource "aws_elasticache_replication_group" "redis" {
   replication_group_id       = "${var.project_name}-redis"
-  description                = "Redis cluster for Factory Tycoon"
-  engine                     = "redis"
+  description                = "Valkey cluster for Factory Tycoon"
+  engine                     = "valkey"
   engine_version             = var.redis_engine_version
   node_type                  = var.redis_node_type
   num_cache_clusters         = var.redis_num_cache_nodes
