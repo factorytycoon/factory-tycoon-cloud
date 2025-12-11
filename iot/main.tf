@@ -9,6 +9,10 @@ data "aws_region" "current" {}
 resource "aws_iot_thing" "device" {
   for_each = var.devices
   name     = each.value.thing_name
+
+  lifecycle {
+    create_before_destroy = false
+  }
 }
 
 # 2. 디바이스 인증서 생성 (자체 서명)
@@ -40,6 +44,10 @@ resource "aws_iot_certificate" "device" {
   certificate_pem = tls_self_signed_cert.device[each.key].cert_pem
   ca_pem          = ""
   active          = true
+
+  lifecycle {
+    create_before_destroy = false
+  }
 
   depends_on = [tls_self_signed_cert.device]
 }
