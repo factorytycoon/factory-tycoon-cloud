@@ -9,16 +9,6 @@ variable "project_name" {
   description = "프로젝트 이름 (리소스명 prefix)"
 }
 
-variable "vpc_id" {
-  type        = string
-  description = "VPC ID (vpc 모듈에서 가져오기)"
-}
-
-variable "private_subnets" {
-  type        = list(string)
-  description = "Private Subnet IDs (Redis 배치용)"
-}
-
 variable "allowed_cidr_blocks" {
   type        = list(string)
   default     = ["10.0.0.0/16"]

@@ -6,7 +6,7 @@
 resource "aws_security_group" "redis" {
   name        = "${var.project_name}-redis-sg"
   description = "Security group for ElastiCache Redis"
-  vpc_id      = var.vpc_id
+  vpc_id      = data.terraform_remote_state.vpc.outputs.vpc_id
 
   ingress {
     description = "Redis from VPC"
@@ -35,7 +35,7 @@ resource "aws_security_group" "redis" {
 # 2. Subnet Group - Redis가 배치될 서브넷
 resource "aws_elasticache_subnet_group" "redis" {
   name       = "${var.project_name}-redis-subnet-group"
-  subnet_ids = var.private_subnets
+  subnet_ids = data.terraform_remote_state.vpc.outputs.private_subnets
 
   tags = merge(
     var.common_tags,
