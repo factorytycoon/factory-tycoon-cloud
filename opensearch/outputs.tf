@@ -18,11 +18,6 @@ output "dashboard_endpoint" {
   value       = aws_opensearch_domain.main.dashboard_endpoint
 }
 
-output "security_group_id" {
-  description = "OpenSearch 보안 그룹 ID"
-  value       = aws_security_group.opensearch.id
-}
-
 output "access_url" {
   description = "OpenSearch 접속 URL"
   value       = "https://${aws_opensearch_domain.main.endpoint}"
