@@ -21,7 +21,7 @@ for module in "${MODULES[@]}"; do
   
   # terraform init
   echo "→ terraform init"
-  terraform init
+  terraform init -reconfigure
   
   # terraform destroy
   echo "→ terraform destroy"
