@@ -20,8 +20,8 @@ for module in "${MODULES[@]}"; do
   cd "$module"
   
   # terraform init
-  echo "→ terraform init"
-  terraform init
+  echo "→ terraform init -reconfigure"
+  terraform init -reconfigure
   
   # terraform plan
   echo "→ terraform plan"
