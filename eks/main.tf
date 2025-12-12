@@ -19,6 +19,8 @@ module "eks" {
     kube-proxy = { most_recent = true }
     vpc-cni    = { most_recent = true }
   }
+  
+  create_cloudwatch_log_group = false
 
   eks_managed_node_groups = {
     fe_group = {
