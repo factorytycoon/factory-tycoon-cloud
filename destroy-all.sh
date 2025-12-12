@@ -28,7 +28,7 @@ for module in "${MODULES[@]}"; do
   terraform destroy -auto-approve
   
   cd ..
-  echo "✅ [$module] 제거 완료"
+  echo "[$module] 제거 완료"
   echo ""
 done
 
