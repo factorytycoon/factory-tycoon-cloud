@@ -35,7 +35,7 @@ for module in "${MODULES[@]}"; do
   rm -f tfplan
   
   cd ..
-  echo "✅ [$module] 배포 완료"
+  echo "[$module] 배포 완료"
   echo ""
 done
 
