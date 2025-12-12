@@ -1,6 +1,5 @@
 provider "aws" {
   region  = var.aws_region
-  # profile = "edu"
 }
 
 # EKS 클러스터 인증 정보 조회 (helm provider 초기화에 필요)
