@@ -2,7 +2,7 @@
 
 set -e  # 에러 발생 시 즉시 종료
 
-MODULES=("iot" "elasticache" "eks" "vpc" "s3")
+MODULES=("opensearch" "iot" "elasticache" "eks" "security-groups" "vpc" "s3")
 
 echo "=========================================="
 echo "Factory Tycoon Cloud destroy script"

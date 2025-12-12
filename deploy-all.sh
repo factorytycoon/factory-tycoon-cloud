@@ -2,7 +2,7 @@
 
 set -e  # 에러 발생 시 즉시 종료
 
-MODULES=("s3" "vpc" "eks" "elasticache" "iot")
+MODULES=("s3" "vpc" "security-groups" "eks" "elasticache" "iot" "opensearch")
 
 echo "=========================================="
 echo "Factory Tycoon Cloud deploy script"
