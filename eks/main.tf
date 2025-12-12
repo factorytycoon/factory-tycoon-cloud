@@ -7,8 +7,8 @@ module "eks" {
   cluster_name    = var.cluster_name
   cluster_version = "1.34"
 
-  vpc_id     = var.vpc_id
-  subnet_ids = var.private_subnets
+  vpc_id     = data.terraform_remote_state.vpc.outputs.vpc_id
+  subnet_ids = data.terraform_remote_state.vpc.outputs.private_subnets
 
   cluster_endpoint_public_access = true
 
@@ -54,7 +54,7 @@ data "http" "alb_iam_policy" {
 
 resource "aws_iam_policy" "alb_controller" {
   name   = "AWSLoadBalancerControllerIAMPolicy"
-  policy = data.http.alb_iam_policy.body
+  policy = data.http.alb_iam_policy.response_body
 }
 
 
@@ -96,7 +96,7 @@ resource "helm_release" "aws_lb_controller" {
   yamlencode({
     clusterName = module.eks.cluster_name
     region      = var.aws_region
-    vpcId       = var.vpc_id
+    vpcId       = data.terraform_remote_state.vpc.outputs.vpc_id
 
     serviceAccount = {
       create = true

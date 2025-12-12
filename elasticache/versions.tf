@@ -10,7 +10,7 @@ terraform {
 
   backend "s3" {
     bucket  = "factory-tycoon-terraform-state"
-    key     = "vpc/terraform.tfstate"
+    key     = "elasticache/terraform.tfstate"
     region  = "ap-northeast-2"
     encrypt = true
   }

@@ -9,6 +9,13 @@ crash.log
 tfplan
 
 # OS / Editor
+.vscode/
+.idea/
 .DS_Store
 *.swp
 *.swo
+
+# 민감 정보
+*.pem
+*.key
+terraform.tfvars
