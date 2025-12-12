@@ -7,6 +7,7 @@ variable "region" {
 variable "domain_name" {
   description = "OpenSearch 도메인 이름"
   type        = string
+  default     = "factory-tycoon-search"
 }
 
 variable "instance_type" {
@@ -30,12 +31,14 @@ variable "ebs_volume_size" {
 variable "master_user_name" {
   description = "마스터 사용자 이름"
   type        = string
+  default     = "user"
 }
 
 variable "master_user_password" {
   description = "마스터 사용자 패스워드"
   type        = string
   sensitive   = true
+  default     = "12345678"
 }
 
 variable "tags" {
