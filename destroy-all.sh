@@ -21,6 +21,23 @@ for module in "${MODULES[@]}"; do
   
   cd "$module"
   
+  # IoT 리소스 사전 정리
+  if [ "$module" = "iot" ]; then
+    echo "→ IoT attachment 사전 정리"
+    set +e
+    for policy in $(aws iot list-policies --region ap-northeast-2 --query 'policies[?starts_with(policyName, `ft-policy`)].policyName' --output text 2>/dev/null); do
+      for target in $(aws iot list-targets-for-policy --policy-name "$policy" --region ap-northeast-2 --query 'targets[]' --output text 2>/dev/null); do
+        aws iot detach-policy --policy-name "$policy" --target "$target" --region ap-northeast-2 2>/dev/null || true
+      done
+    done
+    for thing in $(aws iot list-things --region ap-northeast-2 --query 'things[?starts_with(thingName, `ft-device`)].thingName' --output text 2>/dev/null); do
+      for principal in $(aws iot list-thing-principals --thing-name "$thing" --region ap-northeast-2 --query 'principals[]' --output text 2>/dev/null); do
+        aws iot detach-thing-principal --thing-name "$thing" --principal "$principal" --region ap-northeast-2 2>/dev/null || true
+      done
+    done
+    set -e
+  fi
+  
   # terraform init
   echo "→ terraform init"
   terraform init -reconfigure
