@@ -87,7 +87,7 @@ resource "aws_route_table_association" "public_c" {
 
 # NAT EIP
 resource "aws_eip" "nat" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = "sf-nat-eip"

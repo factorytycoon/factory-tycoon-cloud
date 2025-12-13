@@ -12,5 +12,6 @@ terraform {
     bucket = "factory-tycoon-terraform-state"
     key    = "security-groups/terraform.tfstate"
     region = "ap-northeast-2"
+    use_lockfile = true
   }
 }
