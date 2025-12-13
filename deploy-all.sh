@@ -2,7 +2,9 @@
 
 set -e  # 에러 발생 시 즉시 종료
 
-MODULES=("s3" "vpc" "eks" "elasticache" "iot")
+START_TIME=$SECONDS
+
+MODULES=("vpc" "security-groups" "eks" "elasticache" "iot" "opensearch")
 
 echo "=========================================="
 echo "Factory Tycoon Cloud deploy script"
@@ -39,6 +41,11 @@ for module in "${MODULES[@]}"; do
   echo ""
 done
 
+ELAPSED=$((SECONDS - START_TIME))
+MINUTES=$((ELAPSED / 60))
+SECONDS_REMAINING=$((ELAPSED % 60))
+
 echo "=========================================="
 echo "deploy done"
+echo "총 소요시간: ${MINUTES}분 ${SECONDS_REMAINING}초"
 echo "=========================================="

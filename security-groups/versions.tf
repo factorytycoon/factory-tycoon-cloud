@@ -1,6 +1,6 @@
 terraform {
   required_version = ">= 1.5.0"
-
+  
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -9,10 +9,9 @@ terraform {
   }
 
   backend "s3" {
-    bucket  = "factory-tycoon-terraform-state"
-    key     = "eks/terraform.tfstate"
-    region  = "ap-northeast-2"
-    encrypt = true
+    bucket = "factory-tycoon-terraform-state"
+    key    = "security-groups/terraform.tfstate"
+    region = "ap-northeast-2"
     use_lockfile = true
   }
 }

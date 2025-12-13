@@ -2,7 +2,9 @@
 
 set -e  # 에러 발생 시 즉시 종료
 
-MODULES=("iot" "elasticache" "eks" "vpc" "s3")
+START_TIME=$SECONDS
+
+MODULES=("opensearch" "iot" "elasticache" "eks" "security-groups" "vpc")
 
 echo "=========================================="
 echo "Factory Tycoon Cloud destroy script"
@@ -32,6 +34,11 @@ for module in "${MODULES[@]}"; do
   echo ""
 done
 
+ELAPSED=$((SECONDS - START_TIME))
+MINUTES=$((ELAPSED / 60))
+SECONDS_REMAINING=$((ELAPSED % 60))
+
 echo "=========================================="
 echo "destroy done"
+echo "총 소요시간: ${MINUTES}분 ${SECONDS_REMAINING}초"
 echo "=========================================="

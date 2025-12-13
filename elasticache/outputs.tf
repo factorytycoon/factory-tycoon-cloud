@@ -13,11 +13,6 @@ output "redis_port" {
   description = "Redis 포트"
 }
 
-output "redis_security_group_id" {
-  value       = aws_security_group.redis.id
-  description = "Redis Security Group ID (Lambda 등에서 사용)"
-}
-
 output "redis_connection_string" {
   value       = "${aws_elasticache_replication_group.redis.primary_endpoint_address}:${var.redis_port}"
   description = "Redis 연결 문자열"
