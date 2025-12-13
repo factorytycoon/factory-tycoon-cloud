@@ -46,5 +46,7 @@ variable "tags" {
   type        = map(string)
   default = {
     Project = "factory-tycoon"
+    Environment = "production"
+    ManagedBy   = "terraform"
   }
 }

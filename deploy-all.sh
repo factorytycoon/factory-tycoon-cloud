@@ -4,7 +4,7 @@ set -e  # 에러 발생 시 즉시 종료
 
 START_TIME=$SECONDS
 
-MODULES=("vpc" "security-groups" "eks" "elasticache" "iot" "opensearch")
+MODULES=("vpc" "security-groups" "eks" "elasticache" "iot" "opensearch" "lambda")
 
 echo "=========================================="
 echo "Factory Tycoon Cloud deploy script"
