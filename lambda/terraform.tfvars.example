@@ -1,0 +1,5 @@
+project             = "factory-tycoon"
+
+mongodb_uri         = "mongodb://username:password@host:27017"
+mongodb_database    = "factory-tycoon"
+iot_topic           = "sensor/data/#"

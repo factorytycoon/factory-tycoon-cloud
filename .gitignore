@@ -7,6 +7,7 @@ terraform.tfstate.backup
 *.tfstate.backup
 crash.log
 tfplan
+builds/
 
 # OS / Editor
 .vscode/
@@ -19,3 +20,10 @@ tfplan
 *.pem
 *.key
 terraform.tfvars
+
+# Lambda build artifacts (vendored dependencies inside function dirs)
+lambda/functions/*/*
+!lambda/functions/*/*.py
+lambda/functions/*/six.py
+!lambda/functions/*/requirements.txt
+!lambda/functions/*/README.md
