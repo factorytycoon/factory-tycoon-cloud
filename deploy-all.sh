@@ -20,6 +20,17 @@ for module in "${MODULES[@]}"; do
   fi
   
   cd "$module"
+    # Lambda 모듈일 경우 의존성 빌드 먼저 실행
+    if [ "$module" = "lambda" ]; then
+      echo "→ Lambda 의존성 빌드 중..."
+      if [ -f "build.sh" ]; then
+        ./build.sh
+        echo "→ Lambda 의존성 빌드 완료"
+      else
+        echo "[!] build.sh를 찾을 수 없습니다. 건너뜁니다."
+      fi
+    fi
+  
   
   # terraform init
   echo "→ terraform init -reconfigure"

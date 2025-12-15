@@ -38,7 +38,7 @@ variable "master_user_password" {
   description = "마스터 사용자 패스워드"
   type        = string
   sensitive   = true
-  default     = "12345678"
+  default     = "12345678Qq!"
 }
 
 variable "tags" {

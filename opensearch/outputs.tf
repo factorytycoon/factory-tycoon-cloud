@@ -27,3 +27,14 @@ output "dashboard_url" {
   description = "OpenSearch Dashboards 접속 URL"
   value       = "https://${aws_opensearch_domain.main.endpoint}/_dashboards"
 }
+
+output "master_user_name" {
+  description = "OpenSearch 마스터 사용자 이름"
+  value       = var.master_user_name
+}
+
+output "master_user_password" {
+  description = "OpenSearch 마스터 사용자 패스워드"
+  value       = var.master_user_password
+  sensitive   = true
+}

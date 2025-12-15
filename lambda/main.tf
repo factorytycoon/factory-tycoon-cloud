@@ -46,9 +46,58 @@ resource "aws_iam_role_policy" "lambda_custom_policy" {
           "elasticache:DescribeCacheClusters",
           "es:ESHttpGet",
           "es:ESHttpPut",
-          "es:ESHttpPost"
+          "es:ESHttpPost",
+          "es:ESHttpHead",
+          "es:ESHttpDelete"
         ]
         Resource = "*"
+      }
+    ]
+  })
+}
+
+# SQS consume permissions for Lambda execution role
+resource "aws_iam_role_policy" "lambda_sqs_consume" {
+  name = "${var.project}-lambda-sqs-consume"
+  role = aws_iam_role.lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "sqs:ReceiveMessage",
+          "sqs:DeleteMessage",
+          "sqs:GetQueueAttributes",
+          "sqs:ChangeMessageVisibility"
+        ],
+        Resource = [
+          aws_sqs_queue.mongodb_queue.arn,
+          aws_sqs_queue.opensearch_queue.arn
+        ]
+      }
+    ]
+  })
+}
+
+# SQS send permissions for iot-to-cache Lambda
+resource "aws_iam_role_policy" "lambda_sqs_send" {
+  name = "${var.project}-lambda-sqs-send"
+  role = aws_iam_role.lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "sqs:SendMessage"
+        ],
+        Resource = [
+          aws_sqs_queue.mongodb_queue.arn,
+          aws_sqs_queue.opensearch_queue.arn
+        ]
       }
     ]
   })
@@ -73,13 +122,18 @@ resource "aws_lambda_function" "iot_to_cache" {
 
   vpc_config {
     subnet_ids         = data.terraform_remote_state.vpc.outputs.private_subnets
-    security_group_ids = [data.terraform_remote_state.security_groups.outputs.common_sg_id]
+    security_group_ids = [
+      data.terraform_remote_state.security_groups.outputs.common_sg_id,
+      data.terraform_remote_state.security_groups.outputs.data_sg_id
+    ]
   }
 
   environment {
     variables = {
-      REDIS_ENDPOINT = var.redis_endpoint
-      REDIS_PORT     = var.redis_port
+      REDIS_ENDPOINT = data.terraform_remote_state.elasticache.outputs.redis_primary_endpoint
+      REDIS_PORT     = data.terraform_remote_state.elasticache.outputs.redis_port
+      MONGODB_QUEUE_URL = aws_sqs_queue.mongodb_queue.id
+      OPENSEARCH_QUEUE_URL = aws_sqs_queue.opensearch_queue.id
     }
   }
 
@@ -107,13 +161,16 @@ resource "aws_lambda_function" "cache_to_mongodb" {
 
   vpc_config {
     subnet_ids         = data.terraform_remote_state.vpc.outputs.private_subnets
-    security_group_ids = [data.terraform_remote_state.security_groups.outputs.common_sg_id]
+    security_group_ids = [
+      data.terraform_remote_state.security_groups.outputs.common_sg_id,
+      data.terraform_remote_state.security_groups.outputs.data_sg_id
+    ]
   }
 
   environment {
     variables = {
-      REDIS_ENDPOINT = var.redis_endpoint
-      REDIS_PORT     = var.redis_port
+      REDIS_ENDPOINT = data.terraform_remote_state.elasticache.outputs.redis_primary_endpoint
+      REDIS_PORT     = data.terraform_remote_state.elasticache.outputs.redis_port
       MONGODB_URI    = var.mongodb_uri
       MONGODB_DB     = var.mongodb_database
     }
@@ -143,14 +200,19 @@ resource "aws_lambda_function" "cache_to_opensearch" {
 
   vpc_config {
     subnet_ids         = data.terraform_remote_state.vpc.outputs.private_subnets
-    security_group_ids = [data.terraform_remote_state.security_groups.outputs.common_sg_id]
+    security_group_ids = [
+      data.terraform_remote_state.security_groups.outputs.common_sg_id,
+      data.terraform_remote_state.security_groups.outputs.data_sg_id
+    ]
   }
 
   environment {
     variables = {
-      REDIS_ENDPOINT      = var.redis_endpoint
-      REDIS_PORT          = var.redis_port
-      OPENSEARCH_ENDPOINT = var.opensearch_endpoint
+      REDIS_ENDPOINT           = data.terraform_remote_state.elasticache.outputs.redis_primary_endpoint
+      REDIS_PORT               = data.terraform_remote_state.elasticache.outputs.redis_port
+      OPENSEARCH_ENDPOINT      = data.terraform_remote_state.opensearch.outputs.endpoint
+      OPENSEARCH_MASTER_USER   = data.terraform_remote_state.opensearch.outputs.master_user_name
+      OPENSEARCH_MASTER_PASSWORD = data.terraform_remote_state.opensearch.outputs.master_user_password
     }
   }
 
@@ -182,43 +244,51 @@ resource "aws_lambda_permission" "iot_invoke" {
 }
 
 # EventBridge Rule for Lambda 2 (매 5분마다 실행)
-resource "aws_cloudwatch_event_rule" "cache_to_mongodb_schedule" {
-  name                = "${var.project}-cache-to-mongodb-schedule"
-  description         = "Trigger cache to mongodb lambda every 5 minutes"
-  schedule_expression = "rate(5 minutes)"
+#### SQS for immediate triggering ####
+resource "aws_sqs_queue" "mongodb_queue" {
+  name                       = "${var.project}-mongodb-queue"
+  visibility_timeout_seconds = 330
+  message_retention_seconds  = 1209600
 }
 
-resource "aws_cloudwatch_event_target" "cache_to_mongodb_target" {
-  rule      = aws_cloudwatch_event_rule.cache_to_mongodb_schedule.name
-  target_id = "lambda"
-  arn       = aws_lambda_function.cache_to_mongodb.arn
+resource "aws_sqs_queue" "opensearch_queue" {
+  name                       = "${var.project}-opensearch-queue"
+  visibility_timeout_seconds = 330
+  message_retention_seconds  = 1209600
 }
 
-resource "aws_lambda_permission" "allow_eventbridge_mongodb" {
-  statement_id  = "AllowExecutionFromEventBridge"
+# SQS -> Lambda trigger for MongoDB
+resource "aws_lambda_event_source_mapping" "mongodb_sqs_trigger" {
+  event_source_arn  = aws_sqs_queue.mongodb_queue.arn
+  function_name     = aws_lambda_function.cache_to_mongodb.arn
+  batch_size        = 10
+  maximum_batching_window_in_seconds = 0
+  enabled           = true
+}
+
+# Permissions: allow SQS to invoke Lambda
+resource "aws_lambda_permission" "allow_sqs_mongodb" {
+  statement_id  = "AllowExecutionFromSQS"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.cache_to_mongodb.function_name
-  principal     = "events.amazonaws.com"
-  source_arn    = aws_cloudwatch_event_rule.cache_to_mongodb_schedule.arn
+  principal     = "sqs.amazonaws.com"
+  source_arn    = aws_sqs_queue.mongodb_queue.arn
 }
 
-# EventBridge Rule for Lambda 3 (매 5분마다 실행)
-resource "aws_cloudwatch_event_rule" "cache_to_opensearch_schedule" {
-  name                = "${var.project}-cache-to-opensearch-schedule"
-  description         = "Trigger cache to opensearch lambda every 5 minutes"
-  schedule_expression = "rate(5 minutes)"
+# SQS -> Lambda trigger for OpenSearch (real-time, not scheduled)
+resource "aws_lambda_event_source_mapping" "opensearch_sqs_trigger" {
+  event_source_arn  = aws_sqs_queue.opensearch_queue.arn
+  function_name     = aws_lambda_function.cache_to_opensearch.arn
+  batch_size        = 10
+  maximum_batching_window_in_seconds = 0
+  enabled           = true
 }
 
-resource "aws_cloudwatch_event_target" "cache_to_opensearch_target" {
-  rule      = aws_cloudwatch_event_rule.cache_to_opensearch_schedule.name
-  target_id = "lambda"
-  arn       = aws_lambda_function.cache_to_opensearch.arn
-}
-
-resource "aws_lambda_permission" "allow_eventbridge_opensearch" {
-  statement_id  = "AllowExecutionFromEventBridge"
+# Permissions: allow SQS to invoke Lambda for OpenSearch
+resource "aws_lambda_permission" "allow_sqs_opensearch" {
+  statement_id  = "AllowExecutionFromSQS"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.cache_to_opensearch.function_name
-  principal     = "events.amazonaws.com"
-  source_arn    = aws_cloudwatch_event_rule.cache_to_opensearch_schedule.arn
+  principal     = "sqs.amazonaws.com"
+  source_arn    = aws_sqs_queue.opensearch_queue.arn
 }
