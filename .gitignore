@@ -20,3 +20,10 @@ builds/
 *.pem
 *.key
 terraform.tfvars
+
+# Lambda build artifacts (vendored dependencies inside function dirs)
+lambda/functions/*/*
+!lambda/functions/*/*.py
+lambda/functions/*/six.py
+!lambda/functions/*/requirements.txt
+!lambda/functions/*/README.md

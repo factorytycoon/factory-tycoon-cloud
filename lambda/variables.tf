@@ -4,16 +4,17 @@ variable "project" {
   default     = "factory-tycoon"
 }
 
-variable "redis_endpoint" {
-  description = "ElastiCache Redis endpoint"
-  type        = string
-}
+# variable "redis_endpoint" {
+#   description = "ElastiCache Redis endpoint"
+#   type        = string
+#   default     = data.terraform_remote_state.elasticache.outputs.redis_primary_endpoint
+# }
 
-variable "redis_port" {
-  description = "ElastiCache Redis port"
-  type        = number
-  default     = 6379
-}
+# variable "redis_port" {
+#   description = "ElastiCache Redis port"
+#   type        = number
+#   default     = 6379
+# }
 
 variable "mongodb_uri" {
   description = "MongoDB connection URI"
@@ -24,16 +25,16 @@ variable "mongodb_uri" {
 variable "mongodb_database" {
   description = "MongoDB database name"
   type        = string
-  default     = "factory_tycoon"
+  default     = "factory-tycoon"
 }
 
-variable "opensearch_endpoint" {
-  description = "OpenSearch endpoint URL"
-  type        = string
-}
+# variable "opensearch_endpoint" {
+#   description = "OpenSearch endpoint URL"
+#   type        = string
+# }
 
 variable "iot_topic" {
   description = "IoT topic to subscribe"
   type        = string
-  default     = "factory/sensors/#"
+  default     = "sensor/data/#"
 }

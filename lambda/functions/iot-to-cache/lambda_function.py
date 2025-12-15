@@ -1,6 +1,7 @@
 import json
 import os
 import redis
+import boto3
 
 # Redis 연결
 redis_client = redis.Redis(
@@ -8,6 +9,10 @@ redis_client = redis.Redis(
     port=int(os.environ['REDIS_PORT']),
     decode_responses=True
 )
+
+sqs = boto3.client('sqs')
+MONGODB_QUEUE_URL = os.environ.get('MONGODB_QUEUE_URL')
+OPENSEARCH_QUEUE_URL = os.environ.get('OPENSEARCH_QUEUE_URL')
 
 def lambda_handler(event, context):
     """
@@ -36,6 +41,10 @@ def lambda_handler(event, context):
         # 3. 처리 대기 큐에 추가 (Lambda 2, 3에서 처리)
         redis_client.lpush('pending:mongodb', json.dumps(data))
         redis_client.lpush('pending:opensearch', json.dumps(data))
+        if MONGODB_QUEUE_URL:
+            sqs.send_message(QueueUrl=MONGODB_QUEUE_URL, MessageBody=json.dumps(data))
+        if OPENSEARCH_QUEUE_URL:
+            sqs.send_message(QueueUrl=OPENSEARCH_QUEUE_URL, MessageBody=json.dumps(data))
         
         print(f"Successfully stored data for sensor {sensor_id}")
         

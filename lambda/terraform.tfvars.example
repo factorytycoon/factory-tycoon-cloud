@@ -1,7 +1,5 @@
 project             = "factory-tycoon"
-redis_endpoint      = "your-elasticache-endpoint.cache.amazonaws.com"
-redis_port          = 6379
-mongodb_uri         = "mongodb://username:password@host:port/database"
-mongodb_database    = "factory_tycoon"
-opensearch_endpoint = "https://your-opensearch-endpoint.ap-northeast-2.es.amazonaws.com"
-iot_topic           = "factory/sensors/#"
+
+mongodb_uri         = "mongodb://username:password@host:27017"
+mongodb_database    = "factory-tycoon"
+iot_topic           = "sensor/data/#"
