@@ -9,7 +9,7 @@ terraform {
   }
 
   backend "s3" {
-    bucket  = "factory-tycoon-terraform-state3"
+    bucket  = "factory-tycoon-terraform-state"
     key     = "eks/terraform.tfstate"
     region  = "ap-northeast-2"
     encrypt = true

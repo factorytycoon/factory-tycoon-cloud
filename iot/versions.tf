@@ -2,7 +2,7 @@ terraform {
   required_version = ">= 1.5.0"
 
   backend "s3" {
-    bucket         = "factory-tycoon-terraform-state3"
+    bucket         = "factory-tycoon-terraform-state"
     key            = "iot/terraform.tfstate"
     region         = "ap-northeast-2"
     encrypt        = true
