@@ -24,3 +24,12 @@ provider "helm" {
     cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
   }
 }
+
+variable "github_username" {
+type = string
+}
+
+variable "github_pat" {
+type = string
+sensitive = true
+}

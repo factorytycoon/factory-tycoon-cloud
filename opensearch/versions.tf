@@ -9,7 +9,7 @@ terraform {
   }
 
   backend "s3" {
-    bucket  = "factory-tycoon-terraform-state"
+    bucket  = "factory-tycoon-terraform-state3"
     key     = "opensearch/terraform.tfstate"
     region  = "ap-northeast-2"
     use_lockfile = true

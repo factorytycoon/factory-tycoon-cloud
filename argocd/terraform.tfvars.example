@@ -1,0 +1,4 @@
+github_username = "your-github-username"
+github_pat      = "ghp_xxxxxxxxxxxxxxxxxxxxxx"
+
+aws_region = "ap-northeast-2"

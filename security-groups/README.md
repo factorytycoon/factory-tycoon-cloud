@@ -43,7 +43,7 @@ terraform apply
 data "terraform_remote_state" "security_groups" {
   backend = "s3"
   config = {
-    bucket = "factory-tycoon-terraform-state"
+    bucket = "factory-tycoon-terraform-state3"
     key    = "security-groups/terraform.tfstate"
     region = "ap-northeast-2"
   }
