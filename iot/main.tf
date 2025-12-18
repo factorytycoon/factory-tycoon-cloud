@@ -119,3 +119,65 @@ resource "aws_iot_thing_principal_attachment" "device" {
 data "aws_iot_endpoint" "data" {
   endpoint_type = "iot:Data-ATS"
 }
+
+# 8. AWS Root CA 인증서 다운로드
+data "http" "aws_root_ca" {
+  url = "https://www.amazontrust.com/repository/AmazonRootCA1.pem"
+}
+
+# 9. 라즈베리파이용 인증서 파일 자동 생성
+resource "local_file" "device_certificate" {
+  for_each        = var.devices
+  content         = tls_self_signed_cert.device[each.key].cert_pem
+  filename        = "${path.module}/certs/${each.key}/certificate.pem"
+  file_permission = "0400"
+
+  lifecycle {
+    ignore_changes = [content]
+  }
+}
+
+resource "local_file" "device_private_key" {
+  for_each        = var.devices
+  content         = tls_private_key.device[each.key].private_key_pem
+  filename        = "${path.module}/certs/${each.key}/private-key.pem"
+  file_permission = "0400"
+
+  lifecycle {
+    ignore_changes = [content]
+  }
+}
+
+resource "local_file" "aws_root_ca" {
+  for_each        = var.devices
+  content         = data.http.aws_root_ca.response_body
+  filename        = "${path.module}/certs/${each.key}/ca.pem"
+  file_permission = "0644"
+
+  lifecycle {
+    ignore_changes = [content]
+  }
+}
+
+# 10. 라즈베리파이 연결 설정 파일 자동 생성
+resource "local_file" "iot_config" {
+  for_each    = var.devices
+  content = jsonencode({
+    endpoint   = data.aws_iot_endpoint.data.endpoint_address
+    client_id  = each.value.thing_name
+    cert_path  = "${path.module}/certs/${each.key}/certificate.pem"
+    key_path   = "${path.module}/certs/${each.key}/private-key.pem"
+    ca_path    = "${path.module}/certs/${each.key}/ca.pem"
+    topics = {
+      telemetry = "${each.value.topic_prefix}/telemetry"
+      status    = "${each.value.topic_prefix}/status"
+      command   = "${each.value.topic_prefix}/command"
+    }
+  })
+  filename        = "${path.module}/certs/${each.key}/config.json"
+  file_permission = "0644"
+
+  lifecycle {
+    ignore_changes = [content]
+  }
+}

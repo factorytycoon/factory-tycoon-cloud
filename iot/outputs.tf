@@ -37,3 +37,20 @@ output "mqtt_topics" {
   }
   description = "디바이스별 MQTT 토픽 목록"
 }
+
+output "certificate_paths" {
+  value = {
+    for key, device in var.devices : key => {
+      certificate = local_file.device_certificate[key].filename
+      private_key = local_file.device_private_key[key].filename
+      config      = local_file.iot_config[key].filename
+      directory   = "${path.module}/certs/${key}"
+    }
+  }
+  description = "생성된 인증서 파일 경로"
+}
+
+output "iot_endpoint_value" {
+  value       = data.aws_iot_endpoint.data.endpoint_address
+  description = "라즈베리파이 연결용 MQTT 엔드포인트"
+}
