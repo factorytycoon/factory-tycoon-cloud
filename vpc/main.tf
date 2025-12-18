@@ -4,7 +4,7 @@ resource "aws_vpc" "main" {
   enable_dns_hostnames = true
 
   tags = {
-    Name = "sf-vpc"
+    Name = "ft-vpc"
   }
 }
 
@@ -16,7 +16,7 @@ resource "aws_subnet" "public_a" {
   map_public_ip_on_launch = true
 
   tags = {
-    Name = "sf_public_a"
+    Name = "ft_public_a"
   }
 }
 
@@ -27,7 +27,7 @@ resource "aws_subnet" "public_c" {
   map_public_ip_on_launch = true
 
   tags = {
-    Name = "sf_public_c"
+    Name = "ft_public_c"
   }
 }
 
@@ -38,7 +38,7 @@ resource "aws_subnet" "private_a" {
   availability_zone = "ap-northeast-2a"
 
   tags = {
-    Name = "sf_private_a"
+    Name = "ft_private_a"
   }
 }
 
@@ -48,7 +48,7 @@ resource "aws_subnet" "private_c" {
   availability_zone = "ap-northeast-2c"
 
   tags = {
-    Name = "sf_private_c"
+    Name = "ft_private_c"
   }
 }
 
@@ -57,7 +57,7 @@ resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id
 
   tags = {
-    Name = "sf-igw"
+    Name = "ft-igw"
   }
 }
 
@@ -71,7 +71,7 @@ resource "aws_route_table" "public_rt" {
   }
 
   tags = {
-    Name = "sf-public-rt"
+    Name = "ft-public-rt"
   }
 }
 
@@ -90,7 +90,7 @@ resource "aws_eip" "nat" {
   domain = "vpc"
 
   tags = {
-    Name = "sf-nat-eip"
+    Name = "ft-nat-eip"
   }
 }
 
@@ -100,7 +100,7 @@ resource "aws_nat_gateway" "natgw" {
   subnet_id     = aws_subnet.public_a.id
 
   tags = {
-    Name = "sf-natgw"
+    Name = "ft-natgw"
   }
 }
 
@@ -114,7 +114,7 @@ resource "aws_route_table" "private_rt" {
   }
 
   tags = {
-    Name = "sf-private-rt"
+    Name = "ft-private-rt"
   }
 }
 
