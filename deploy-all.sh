@@ -49,8 +49,8 @@ fi
 
 cd argocd
 
-chmod +x bootstrap-argocd.sh
-./bootstrap-argocd.sh
+chmod +x argocd.sh
+./argocd.sh
 
 cd ..
 echo "[argocd] bootstrap 완료"

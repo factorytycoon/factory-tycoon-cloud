@@ -19,7 +19,7 @@ variable "devices" {
   default = {
     raspi1 = {
       thing_name   = "ft-pi-001"
-      topic_prefix = "devices/ft/pi-001"
+      topic_prefix = "sensor/data"
       description  = "라즈베리파이 1번"
     }
   }

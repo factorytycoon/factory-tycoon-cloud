@@ -9,7 +9,33 @@ set -euo pipefail
 
 cd "$(dirname "$0")"
 
-RUNTIME_PY=${RUNTIME_PY:-python3.11}
+# pyenv 초기화
+if command -v pyenv >/dev/null 2>&1; then
+  eval "$(pyenv init --path)"
+  eval "$(pyenv init -)"
+  
+  # .python-version 파일이 있으면 그 버전 사용, 없으면 가장 최신 버전 자동 선택
+  if [ -f ".python-version" ]; then
+    RUNTIME_PY=$(cat .python-version)
+    echo "[*] Using Python version from .python-version: $RUNTIME_PY"
+  else
+    # 설치된 Python 중 가장 최신 3.x 버전 찾기
+    RUNTIME_PY=$(pyenv versions --bare | grep '^3\.' | sort -V | tail -1)
+    if [ -z "$RUNTIME_PY" ]; then
+      echo "[!] No Python 3.x version found in pyenv. Using system python3"
+      RUNTIME_PY=python3
+    else
+      echo "[*] Using latest installed Python version: $RUNTIME_PY"
+      pyenv shell "$RUNTIME_PY"
+    fi
+  fi
+else
+  # pyenv가 설치되어 있지 않으면 환경변수 또는 기본값 사용
+  RUNTIME_PY=${RUNTIME_PY:-python3.11}
+  echo "[*] pyenv not found. Using: $RUNTIME_PY"
+fi
+
+# 최종 확인
 if ! command -v "$RUNTIME_PY" >/dev/null 2>&1; then
   echo "[!] $RUNTIME_PY not found. Falling back to python3"
   RUNTIME_PY=python3
