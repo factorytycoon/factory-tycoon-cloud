@@ -13,3 +13,17 @@ variable "aws_region" {
   type    = string
   default = "ap-northeast-2"
 }
+
+variable "glb_aws_access_key_id" {
+  type      = string
+  sensitive = true
+}
+
+variable "glb_aws_secret_access_key" {
+  type      = string
+  sensitive = true
+}
+
+variable "glb_s3_bucket" {
+  type = string
+}

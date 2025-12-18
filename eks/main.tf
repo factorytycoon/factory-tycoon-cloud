@@ -28,26 +28,19 @@ module "eks" {
   create_cloudwatch_log_group = false
 
   eks_managed_node_groups = {
-    fe_group = {
-      node_group_name = "fe-mqtt-nodegroup"
-      instance_types  = ["t3.small"]
-      desired_size    = 1
-      min_size        = 1
-      max_size        = 2
-      capacity_type   = "ON_DEMAND"
-      labels = { role = "frontend" }
-    }
-
-    be_group = {
-      node_group_name = "backend-nodegroup"
-      instance_types  = ["t3.small"]
-      desired_size    = 1
-      min_size        = 1
-      max_size        = 2
-      capacity_type   = "ON_DEMAND"
-      labels = { role = "backend" }
+  backend_group = {
+    node_group_name = "backend-nodegroup"
+    instance_types  = var.instance_types
+    desired_size    = 2
+    min_size        = 2
+    max_size        = 4
+    capacity_type   = "ON_DEMAND"
+    labels = {
+      role = "backend"
     }
   }
+}
+
 
   enable_cluster_creator_admin_permissions = true
 }

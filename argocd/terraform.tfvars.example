@@ -2,3 +2,7 @@ github_username = "your-github-username"
 github_pat      = "ghp_xxxxxxxxxxxxxxxxxxxxxx"
 
 aws_region = "ap-northeast-2"
+
+glb_aws_access_key_id     = "cns_key"
+glb_aws_secret_access_key = "cns_secret_key"
+glb_s3_bucket             = "s3_name"
