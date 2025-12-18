@@ -21,6 +21,10 @@ builds/
 *.key
 terraform.tfvars
 
+# iot
+iot/certs/
+iot/*.zip
+
 # Lambda build artifacts (vendored dependencies inside function dirs)
 lambda/functions/*/*
 !lambda/functions/*/*.py
