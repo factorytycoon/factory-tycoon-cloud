@@ -5,7 +5,7 @@ variable "aws_region" {
 
 variable "bucket_name" {
   type        = string
-  default     = "factory-tycoon-terraform-state2"
+  default     = "factory-tycoon-terraform-state"
   description = "Terraform state를 저장할 S3 버킷 이름"
 }
 
