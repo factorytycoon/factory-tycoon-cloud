@@ -48,14 +48,18 @@ resource "aws_cloudfront_distribution" "this" {
   default_root_object = "index.html"
   price_class         = "PriceClass_200"
 
-  # ---------- S3 ORIGIN ----------
+  # ======================
+  # ORIGINS
+  # ======================
+
+  # S3 (Frontend)
   origin {
     domain_name              = data.aws_s3_bucket.frontend.bucket_regional_domain_name
     origin_id                = "s3-frontend"
     origin_access_control_id = aws_cloudfront_origin_access_control.oac.id
   }
 
-  # ---------- ALB ORIGIN ----------
+  # ALB (Backend)
   origin {
     domain_name = var.alb_dns_name
     origin_id   = "alb-backend"
@@ -63,45 +67,16 @@ resource "aws_cloudfront_distribution" "this" {
     custom_origin_config {
       http_port              = 80
       https_port             = 443
-      origin_protocol_policy = "https-only"
+      origin_protocol_policy = "http-only"   # ← 중요
       origin_ssl_protocols   = ["TLSv1.2"]
     }
   }
 
-  # ---------- DEFAULT (Frontend SPA) ----------
-  default_cache_behavior {
-    target_origin_id       = "s3-frontend"
-    viewer_protocol_policy = "redirect-to-https"
+  # ======================
+  # ORDERED CACHE BEHAVIOR
+  # ======================
 
-    allowed_methods = ["GET", "HEAD"]
-    cached_methods  = ["GET", "HEAD"]
-
-    forwarded_values {
-      query_string = false
-      cookies {
-        forward = "none"
-      }
-    }
-  }
-
-  # ---------- GLB (/models/* → S3) ----------
-  ordered_cache_behavior {
-    path_pattern           = "/test_factory/*"
-    target_origin_id       = "s3-frontend"
-    viewer_protocol_policy = "redirect-to-https"
-
-    allowed_methods = ["GET", "HEAD"]
-    cached_methods  = ["GET", "HEAD"]
-
-    forwarded_values {
-      query_string = false
-      cookies {
-        forward = "none"
-      }
-    }
-  }
-
-  # ---------- API (/api/* → ALB) ----------
+  # API
   ordered_cache_behavior {
     path_pattern           = "/api/*"
     target_origin_id       = "alb-backend"
@@ -121,37 +96,68 @@ resource "aws_cloudfront_distribution" "this" {
 
     forwarded_values {
       query_string = true
-      headers      = ["Authorization", "Content-Type"]
+          headers      = [
+        "Authorization",
+        "Content-Type",
+        "Host",
+        "Origin",
+        "Access-Control-Request-Method",
+        "Access-Control-Request-Headers"
+        ]
       cookies {
         forward = "all"
       }
     }
   }
 
-# ---------- GLB API (/glb/* → ALB) ----------
-ordered_cache_behavior {
-  path_pattern           = "/glb/*"
-  target_origin_id       = "alb-backend"
-  viewer_protocol_policy = "redirect-to-https"
+  # GLB API
+  ordered_cache_behavior {
+    path_pattern           = "/glb/*"
+    target_origin_id       = "alb-backend"
+    viewer_protocol_policy = "redirect-to-https"
 
-  allowed_methods = [
-    "GET",
-    "HEAD",
-    "OPTIONS"
-  ]
+    allowed_methods = ["GET", "HEAD", "OPTIONS"]
+    cached_methods  = ["GET", "HEAD"]
 
-  cached_methods = ["GET", "HEAD"]
-
-  forwarded_values {
-    query_string = true
-    headers      = ["Authorization", "Content-Type"]
-    cookies {
-      forward = "all"
+    forwarded_values {
+      query_string = true
+          headers      = [
+        "Authorization",
+        "Content-Type",
+        "Host",
+        "Origin",
+        "Access-Control-Request-Method",
+        "Access-Control-Request-Headers"
+            ]
+      cookies {
+        forward = "all"
+      }
     }
   }
-}
 
-  # ---------- SPA Fallback ----------
+  # ======================
+  # DEFAULT (Frontend SPA)
+  # ======================
+
+  default_cache_behavior {
+    target_origin_id       = "s3-frontend"
+    viewer_protocol_policy = "redirect-to-https"
+
+    allowed_methods = ["GET", "HEAD"]
+    cached_methods  = ["GET", "HEAD"]
+
+    forwarded_values {
+      query_string = false
+      cookies {
+        forward = "none"
+      }
+    }
+  }
+
+  # ======================
+  # SPA FALLBACK
+  # ======================
+
   custom_error_response {
     error_code            = 403
     response_code         = 200
@@ -176,6 +182,7 @@ ordered_cache_behavior {
     cloudfront_default_certificate = true
   }
 }
+
 
 
 resource "aws_s3_bucket_policy" "frontend_policy" {
