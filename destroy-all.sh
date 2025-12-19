@@ -30,7 +30,7 @@ for module in "${MODULES[@]}"; do
         aws iot detach-policy --policy-name "$policy" --target "$target" --region ap-northeast-2 2>/dev/null || true
       done
     done
-    for thing in $(aws iot list-things --region ap-northeast-2 --query 'things[?starts_with(thingName, `ft-device`)].thingName' --output text 2>/dev/null); do
+    for thing in $(aws iot list-things --region ap-northeast-2 --query 'things[?starts_with(thingName, `ft-`)].thingName' --output text 2>/dev/null); do
       for principal in $(aws iot list-thing-principals --thing-name "$thing" --region ap-northeast-2 --query 'principals[]' --output text 2>/dev/null); do
         aws iot detach-thing-principal --thing-name "$thing" --principal "$principal" --region ap-northeast-2 2>/dev/null || true
       done

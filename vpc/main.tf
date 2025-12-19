@@ -17,6 +17,8 @@ resource "aws_subnet" "public_a" {
 
   tags = {
     Name = "sf_public_a"
+    "kubernetes.io/cluster/smart-eks" = "shared"
+    "kubernetes.io/role/elb"          = "1"
   }
 }
 
@@ -28,6 +30,8 @@ resource "aws_subnet" "public_c" {
 
   tags = {
     Name = "sf_public_c"
+    "kubernetes.io/cluster/smart-eks" = "shared"
+    "kubernetes.io/role/elb"          = "1"
   }
 }
 
@@ -39,6 +43,8 @@ resource "aws_subnet" "private_a" {
 
   tags = {
     Name = "sf_private_a"
+    "kubernetes.io/cluster/smart-eks" = "shared"
+    "kubernetes.io/role/internal-elb" = "1"
   }
 }
 
@@ -49,6 +55,8 @@ resource "aws_subnet" "private_c" {
 
   tags = {
     Name = "sf_private_c"
+    "kubernetes.io/cluster/smart-eks" = "shared"
+    "kubernetes.io/role/internal-elb" = "1"
   }
 }
 

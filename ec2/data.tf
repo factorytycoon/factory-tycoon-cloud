@@ -2,7 +2,7 @@
 data "terraform_remote_state" "vpc" {
   backend = "s3"
   config = {
-    bucket = "factory-tycoon-terraform-state"
+    bucket = "factory-tycoon-terraform-state2"
     key    = "vpc/terraform.tfstate"
     region = "ap-northeast-2"
   }
