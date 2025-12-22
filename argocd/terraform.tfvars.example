@@ -3,6 +3,20 @@ github_pat      = "ghp_xxxxxxxxxxxxxxxxxxxxxx"
 
 aws_region = "ap-northeast-2"
 
+# GLB Secrets 
+# (s3 = factory-tycoon : lg_cns_5team)
+# (s3 = factory-tycoon2 : lyj2174)
+
 glb_aws_access_key_id     = "cns_key"
 glb_aws_secret_access_key = "cns_secret_key"
 glb_s3_bucket             = "s3_name"
+
+
+# Backend Secrets
+
+mariadb_url      = ""
+mariadb_username = ""
+mariadb_password = ""
+redis_host       = ""
+redis_password   = ""
+jwt_secret_key   = ""
