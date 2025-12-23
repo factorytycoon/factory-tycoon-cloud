@@ -14,9 +14,10 @@ glb_s3_bucket             = "s3_name"
 
 # Backend Secrets
 
-mariadb_url      = ""
-mariadb_username = ""
-mariadb_password = ""
-redis_host       = ""
-redis_password   = ""
-jwt_secret_key   = ""
+
+mariadb_url      = "jdbc:mysql://HOST:PORT/DATABASE"
+mariadb_username = "username"
+mariadb_password = "password"
+redis_host       = "HOST"
+redis_password   = "password"
+jwt_secret_key   = "your-secret-key-change-this-in-production-min-256-bits
