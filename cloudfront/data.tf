@@ -1,5 +1,5 @@
 data "aws_s3_bucket" "frontend" {
-  bucket = "factory-tycoon-frontend"
+  bucket = "factory-tycoon-frontend2"
 }
 
 # EKS (ALB DNS 필요)

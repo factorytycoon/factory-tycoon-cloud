@@ -14,7 +14,8 @@ module "eks" {
 
   # 공통 보안 그룹 추가
   cluster_additional_security_group_ids = [
-    data.terraform_remote_state.security_groups.outputs.common_sg_id
+    data.terraform_remote_state.security_groups.outputs.common_sg_id,
+    data.terraform_remote_state.security_groups.outputs.public_sg_id
   ]
 
   enable_irsa = true

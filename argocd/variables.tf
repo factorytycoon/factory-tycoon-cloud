@@ -14,6 +14,7 @@ variable "aws_region" {
   default = "ap-northeast-2"
 }
 
+# ---------- GLB Secrets ----------
 variable "glb_aws_access_key_id" {
   type      = string
   sensitive = true
@@ -26,4 +27,60 @@ variable "glb_aws_secret_access_key" {
 
 variable "glb_s3_bucket" {
   type = string
+}
+
+# ---------- Backend Secrets ----------
+variable "mariadb_url" {
+  description = "JDBC URL for MariaDB"
+  type        = string
+}
+
+variable "mariadb_username" {
+  description = "Username for MariaDB"
+  type        = string
+}
+
+variable "mariadb_password" {
+  description = "Password for MariaDB"
+  type        = string
+  sensitive   = true
+}
+
+variable "redis_host" {
+  description = "Host address for Redis"
+  type        = string
+}
+
+variable "redis_password" {
+  description = "Password for Redis"
+  type        = string
+  sensitive   = true
+}
+
+variable "jwt_secret_key" {
+  description = "Secret key for JWT"
+  type        = string
+  sensitive   = true
+}
+
+# ---------- Backend Configs ----------
+variable "jwt_access_ttl_ms" {
+  type    = string
+  default = "3600000"
+}
+
+variable "jwt_refresh_ttl_ms" {
+  type    = string
+  default = "86400000"
+}
+
+variable "backend_redis_port" {
+  type    = string
+  default = "6379"
+}
+
+# ---------- GLB Configs ----------
+variable "glb_server_port" {
+  type    = string
+  default = "8081"
 }

@@ -20,6 +20,7 @@ builds/
 *.pem
 *.key
 terraform.tfvars
+env.private.md
 
 # iot
 iot/certs/
