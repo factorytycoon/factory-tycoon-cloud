@@ -56,52 +56,6 @@ resource "aws_iam_role_policy" "lambda_custom_policy" {
   })
 }
 
-# SQS consume permissions for Lambda execution role
-resource "aws_iam_role_policy" "lambda_sqs_consume" {
-  name = "${var.project}-lambda-sqs-consume"
-  role = aws_iam_role.lambda_role.id
-
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Effect = "Allow",
-        Action = [
-          "sqs:ReceiveMessage",
-          "sqs:DeleteMessage",
-          "sqs:GetQueueAttributes",
-          "sqs:ChangeMessageVisibility"
-        ],
-        Resource = [
-          aws_sqs_queue.mongodb_queue.arn,
-          aws_sqs_queue.opensearch_queue.arn
-        ]
-      }
-    ]
-  })
-}
-
-# SQS send permissions for iot-to-cache Lambda
-resource "aws_iam_role_policy" "lambda_sqs_send" {
-  name = "${var.project}-lambda-sqs-send"
-  role = aws_iam_role.lambda_role.id
-
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Effect = "Allow",
-        Action = [
-          "sqs:SendMessage"
-        ],
-        Resource = [
-          aws_sqs_queue.mongodb_queue.arn,
-          aws_sqs_queue.opensearch_queue.arn
-        ]
-      }
-    ]
-  })
-}
 
 # Lambda 1: IoT Core -> ElastiCache
 data "archive_file" "iot_to_cache" {
@@ -132,8 +86,6 @@ resource "aws_lambda_function" "iot_to_cache" {
     variables = {
       REDIS_ENDPOINT = data.terraform_remote_state.elasticache.outputs.redis_primary_endpoint
       REDIS_PORT     = data.terraform_remote_state.elasticache.outputs.redis_port
-      MONGODB_QUEUE_URL = aws_sqs_queue.mongodb_queue.id
-      OPENSEARCH_QUEUE_URL = aws_sqs_queue.opensearch_queue.id
     }
   }
 
@@ -244,51 +196,3 @@ resource "aws_lambda_permission" "iot_invoke" {
 }
 
 # EventBridge Rule for Lambda 2 (매 5분마다 실행)
-#### SQS for immediate triggering ####
-resource "aws_sqs_queue" "mongodb_queue" {
-  name                       = "${var.project}-mongodb-queue"
-  visibility_timeout_seconds = 330
-  message_retention_seconds  = 1209600
-}
-
-resource "aws_sqs_queue" "opensearch_queue" {
-  name                       = "${var.project}-opensearch-queue"
-  visibility_timeout_seconds = 330
-  message_retention_seconds  = 1209600
-}
-
-# SQS -> Lambda trigger for MongoDB
-resource "aws_lambda_event_source_mapping" "mongodb_sqs_trigger" {
-  event_source_arn  = aws_sqs_queue.mongodb_queue.arn
-  function_name     = aws_lambda_function.cache_to_mongodb.arn
-  batch_size        = 10
-  maximum_batching_window_in_seconds = 0
-  enabled           = true
-}
-
-# Permissions: allow SQS to invoke Lambda
-resource "aws_lambda_permission" "allow_sqs_mongodb" {
-  statement_id  = "AllowExecutionFromSQS"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.cache_to_mongodb.function_name
-  principal     = "sqs.amazonaws.com"
-  source_arn    = aws_sqs_queue.mongodb_queue.arn
-}
-
-# SQS -> Lambda trigger for OpenSearch (real-time, not scheduled)
-resource "aws_lambda_event_source_mapping" "opensearch_sqs_trigger" {
-  event_source_arn  = aws_sqs_queue.opensearch_queue.arn
-  function_name     = aws_lambda_function.cache_to_opensearch.arn
-  batch_size        = 10
-  maximum_batching_window_in_seconds = 0
-  enabled           = true
-}
-
-# Permissions: allow SQS to invoke Lambda for OpenSearch
-resource "aws_lambda_permission" "allow_sqs_opensearch" {
-  statement_id  = "AllowExecutionFromSQS"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.cache_to_opensearch.function_name
-  principal     = "sqs.amazonaws.com"
-  source_arn    = aws_sqs_queue.opensearch_queue.arn
-}
