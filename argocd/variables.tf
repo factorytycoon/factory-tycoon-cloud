@@ -51,11 +51,11 @@ variable "redis_host" {
   type        = string
 }
 
-variable "redis_password" {
-  description = "Password for Redis"
-  type        = string
-  sensitive   = true
-}
+# variable "redis_password" {
+#   description = "Password for Redis"
+#   type        = string
+#   sensitive   = true
+# }
 
 variable "jwt_secret_key" {
   description = "Secret key for JWT"

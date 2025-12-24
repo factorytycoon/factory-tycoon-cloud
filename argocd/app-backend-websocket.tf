@@ -1,10 +1,10 @@
-resource "kubernetes_manifest" "argocd_backend_sensor_stream_app" {
+resource "kubernetes_manifest" "argocd_backend_websocket_app" {
   manifest = {
     apiVersion = "argoproj.io/v1alpha1"
     kind       = "Application"
 
     metadata = {
-      name      = "factory-tycoon-backend-sensor-stream"
+      name      = "factory-tycoon-backend-websocket"
       namespace = "argocd"
     }
 
@@ -14,7 +14,7 @@ resource "kubernetes_manifest" "argocd_backend_sensor_stream_app" {
       source = {
         repoURL        = "https://github.com/lgcns5team/factory-tycoon-k8s"
         targetRevision = "main"
-        path           = "be-sensor-stream"   
+        path           = "be-websocket"   
       }
 
       destination = {

@@ -26,12 +26,11 @@ resource "kubernetes_secret" "sf_backend_secrets" {
     MARIADB_USERNAME = var.mariadb_username
     MARIADB_PASSWORD = var.mariadb_password
     REDIS_HOST       = var.redis_host
-    REDIS_PASSWORD   = var.redis_password
     JWT_SECRET_KEY   = var.jwt_secret_key
   }
 }
 
-resource "kubernetes_secret" "sf_backend_sensor_secrets" {
+resource "kubernetes_secret" "sf_backend_websocket_secrets" {
   metadata {
     name      = "sf-backend-sensor-secrets"
     namespace = "default"
