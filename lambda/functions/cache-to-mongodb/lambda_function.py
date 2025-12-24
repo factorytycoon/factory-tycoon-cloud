@@ -1,7 +1,7 @@
 import json
 import os
 import redis
-from datetime import datetime
+from datetime import datetime, timezone
 from pymongo import MongoClient
 
 # Redis 연결
@@ -17,49 +17,70 @@ db = mongo_client[os.environ['MONGODB_DB']]
 collection = db['sensor_data']
 
 def lambda_handler(event, context):
-    """
-    SQS 메시지 또는 직접 호출 이벤트를 받아 MongoDB에 저장.
-    우선 SQS 트리거로 전달된 경우 `event['Records']`를 처리하고,
-    그렇지 않으면 Redis 큐에서 소량을 읽어 처리합니다.
-    """
     processed_count = 0
     try:
         records = []
-        # SQS 이벤트 처리
-        if isinstance(event, dict) and event.get('Records'):
-            for rec in event['Records']:
-                body = rec.get('body')
-                if body:
-                    records.append(json.loads(body))
-        else:
-            # 폴백: Redis 큐에서 몇 개 가져와 처리
-            for _ in range(50):
-                data_json = redis_client.rpop('pending:mongodb')
-                if not data_json:
-                    break
-                records.append(json.loads(data_json))
+        
+        # SQS 제거: Redis Stream만 사용
 
-        # MongoDB에 저장
-        for data in records:
-            data['processed_at'] = datetime.utcnow()
-            collection.insert_one(data)
-            processed_count += 1
+        # 2. Redis Stream (XREADGROUP)
+        if not records:
+            stream_name = 'pending:mongodb_stream'
+            group_name = 'mongodb_group'
+            consumer_name = 'mongodb_consumer_1'
+            try:
+                redis_client.xgroup_create(stream_name, group_name, id='0', mkstream=True)
+            except redis.exceptions.ResponseError as e:
+                if 'BUSYGROUP' not in str(e):
+                    raise
+            batch_size = 50
+            resp = redis_client.xreadgroup(group_name, consumer_name, {stream_name: '>'}, count=batch_size, block=2000)
+            for stream, messages in resp:
+                for msg_id, msg in messages:
+                    data_json = msg.get('data')
+                    if data_json:
+                        try:
+                            records.append(json.loads(data_json))
+                        except json.JSONDecodeError:
+                            pass
+                    redis_client.xack(stream_name, group_name, msg_id)
 
-        print(f"Processed {processed_count} records to MongoDB")
+        # 3. MongoDB에 저장
+        if records:
+            docs_to_insert = []
+            
+            for data in records:
+                try:
+                    # (A) 값(value)을 실수형으로 확실하게 변환
+                    if 'value' in data:
+                        data['value'] = float(data['value'])
+
+                    # [삭제됨] type에 따라 별도 필드(temp, humi 등)를 만드는 코드 삭제함
+                    # 이제 무조건 'value' 필드 하나에 값만 들어갑니다.
+
+                    # (B) 날짜 변환 (Epoch -> ISODate)
+                    if 'timestamp' in data:
+                        data['timestamp_dt'] = datetime.fromtimestamp(float(data['timestamp']), tz=timezone.utc)
+                    
+                    # (C) 데이터 처리 시간 기록
+                    data['processed_at'] = datetime.now(timezone.utc)
+                    
+                    docs_to_insert.append(data)
+                    
+                except Exception as parse_error:
+                    print(f"Error parsing record: {parse_error}")
+
+            if docs_to_insert:
+                result = collection.insert_many(docs_to_insert)
+                processed_count = len(result.inserted_ids)
+
+        print(f"Successfully processed {processed_count} records to MongoDB")
 
         return {
             'statusCode': 200,
-            'body': json.dumps({
-                'message': f'Processed {processed_count} records',
-                'processed_count': processed_count
-            })
+            'body': json.dumps({'message': 'Done', 'count': processed_count})
         }
 
     except Exception as e:
         print(f"Error: {str(e)}")
-        return {
-            'statusCode': 500,
-            'body': json.dumps({
-                'error': str(e)
-            })
-        }
+        return {'statusCode': 500, 'body': json.dumps({'error': str(e)})}

@@ -195,4 +195,36 @@ resource "aws_lambda_permission" "iot_invoke" {
   source_arn    = aws_iot_topic_rule.iot_to_lambda.arn
 }
 
+# EventBridge Rule: schedule to trigger cache processors
+resource "aws_cloudwatch_event_rule" "every_1_minute" {
+  name                = "${var.project}-every-1m"
+  schedule_expression = "rate(1 minute)"
+}
+
+resource "aws_cloudwatch_event_target" "cache_to_mongodb_target" {
+  rule = aws_cloudwatch_event_rule.every_1_minute.name
+  arn  = aws_lambda_function.cache_to_mongodb.arn
+}
+
+resource "aws_cloudwatch_event_target" "cache_to_opensearch_target" {
+  rule = aws_cloudwatch_event_rule.every_1_minute.name
+  arn  = aws_lambda_function.cache_to_opensearch.arn
+}
+
+resource "aws_lambda_permission" "allow_eventbridge_cache_mongodb" {
+  statement_id  = "AllowExecutionFromEventBridgeMongo"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.cache_to_mongodb.function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.every_1_minute.arn
+}
+
+resource "aws_lambda_permission" "allow_eventbridge_cache_opensearch" {
+  statement_id  = "AllowExecutionFromEventBridgeOS"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.cache_to_opensearch.function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.every_1_minute.arn
+}
+
 # EventBridge Rule for Lambda 2 (매 5분마다 실행)

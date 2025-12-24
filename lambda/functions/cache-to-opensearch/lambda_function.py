@@ -1,8 +1,7 @@
 import json
 import os
-from datetime import datetime
-
 import redis
+from datetime import datetime, timezone
 from opensearchpy import OpenSearch, RequestsHttpConnection
 
 # Redis 연결
@@ -12,7 +11,7 @@ redis_client = redis.Redis(
     decode_responses=True,
 )
 
-# OpenSearch 연결: 마스터 사용자 기본 인증
+# OpenSearch 연결
 host = os.environ['OPENSEARCH_ENDPOINT'].replace('https://', '').replace('http://', '')
 master_user = os.environ.get('OPENSEARCH_MASTER_USER', 'user')
 master_pass = os.environ.get('OPENSEARCH_MASTER_PASSWORD', '')
@@ -27,76 +26,83 @@ opensearch_client = OpenSearch(
 
 INDEX_NAME = 'sensor-data'
 
-
 def lambda_handler(event, context):
-    """SQS 메시지에서 데이터를 읽어 OpenSearch에 저장"""
     try:
-        # OpenSearch 인덱스 생성 (없는 경우)
+        # 1. OpenSearch 인덱스 매핑 설정
+        # 불필요한 temp, humi, illu 필드 정의를 삭제했습니다.
+        processed_count = 0
+        records = []
         if not opensearch_client.indices.exists(index=INDEX_NAME):
             opensearch_client.indices.create(
                 index=INDEX_NAME,
                 body={
                     'mappings': {
                         'properties': {
+                            'device_id': {'type': 'keyword'},
                             'sensor_id': {'type': 'keyword'},
+                            'type': {'type': 'keyword'},
+                            'value': {'type': 'float'},     # 오직 이 값만 사용
+                            'unit': {'type': 'keyword'},
                             'timestamp': {'type': 'date'},
-                            # 'value': {'type': 'float'},
-                            # 'processed_at': {'type': 'date'},
+                            'processed_at': {'type': 'date'}
                         }
                     }
                 },
             )
 
-        processed_count = 0
-
-        # SQS Records 처리 (있으면 SQS에서, 없으면 Redis에서 폴링)
-        if 'Records' in event:
-            # SQS 이벤트
-            for record in event['Records']:
-                try:
-                    data_json = record['body']
-                    data = json.loads(data_json)
-
-                    # OpenSearch에 저장
-                    data['processed_at'] = datetime.utcnow().isoformat()
-                    opensearch_client.index(
-                        index=INDEX_NAME,
-                        body=data,
-                    )
-                    processed_count += 1
-                except Exception as e:
-                    print(f"Error processing SQS record: {str(e)}")
+        # 2. 데이터 수집
+        # SQS 제거: Redis Stream만 사용
         else:
-            # 폴백: Redis에서 직접 읽기 (SQS 없을 시)
-            batch_size = 100
-            for _ in range(batch_size):
-                data_json = redis_client.rpop('pending:opensearch')
-                if not data_json:
-                    break
+            # Redis Stream (XREADGROUP)
+            stream_name = 'pending:opensearch_stream'
+            group_name = 'opensearch_group'
+            consumer_name = 'opensearch_consumer_1'
+            try:
+                redis_client.xgroup_create(stream_name, group_name, id='0', mkstream=True)
+            except redis.exceptions.ResponseError as e:
+                if 'BUSYGROUP' not in str(e):
+                    raise
+            batch_size = 50
+            resp = redis_client.xreadgroup(group_name, consumer_name, {stream_name: '>'}, count=batch_size, block=2000)
+            for stream, messages in resp:
+                for msg_id, msg in messages:
+                    data_json = msg.get('data')
+                    if data_json:
+                        try:
+                            records.append(json.loads(data_json))
+                        except json.JSONDecodeError:
+                            pass
+                    redis_client.xack(stream_name, group_name, msg_id)
 
-                data = json.loads(data_json)
-                data['processed_at'] = datetime.utcnow().isoformat()
-                opensearch_client.index(
-                    index=INDEX_NAME,
-                    body=data,
-                )
+        # 3. 데이터 저장
+        for data in records:
+            try:
+                # (A) Timestamp 변환
+                if 'timestamp' in data:
+                    ts_val = float(data['timestamp'])
+                    data['timestamp'] = datetime.fromtimestamp(ts_val, tz=timezone.utc).isoformat()
+                
+                # (B) 값 변환 (실수형)
+                if 'value' in data:
+                    data['value'] = float(data['value'])
+                    
+                # [삭제됨] 값을 temp/humi 필드로 복사하던 코드 삭제함
+
+                data['processed_at'] = datetime.now(timezone.utc).isoformat()
+
+                opensearch_client.index(index=INDEX_NAME, body=data)
                 processed_count += 1
+                
+            except Exception as e:
+                print(f"Error indexing: {e}")
 
         print(f"Processed {processed_count} records to OpenSearch")
 
         return {
             'statusCode': 200,
-            'body': json.dumps({
-                'message': f'Processed {processed_count} records',
-                'processed_count': processed_count,
-            }),
+            'body': json.dumps({'count': processed_count})
         }
 
     except Exception as e:
         print(f"Error: {str(e)}")
-        return {
-            'statusCode': 500,
-            'body': json.dumps({
-                'error': str(e),
-            }),
-        }
+        return {'statusCode': 500, 'body': json.dumps({'error': str(e)})}
