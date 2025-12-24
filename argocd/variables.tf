@@ -84,3 +84,19 @@ variable "glb_server_port" {
   type    = string
   default = "8081"
 }
+
+# ---------- Redis Stream Configs ----------
+variable "redis_stream_key" {
+  description = "Redis stream key for backend consumer"
+  type        = string
+}
+
+variable "consumer_group" {
+  description = "Redis consumer group name"
+  type        = string
+}
+
+variable "consumer_name" {
+  description = "Redis consumer name"
+  type        = string
+}

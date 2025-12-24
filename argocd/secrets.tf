@@ -30,3 +30,19 @@ resource "kubernetes_secret" "sf_backend_secrets" {
     JWT_SECRET_KEY   = var.jwt_secret_key
   }
 }
+
+resource "kubernetes_secret" "sf_backend_sensor_secrets" {
+  metadata {
+    name      = "sf-backend-sensor-secrets"
+    namespace = "default"
+  }
+
+  type = "Opaque"
+
+  data = {
+    REDIS_HOST       = var.redis_host
+    REDIS_STREAM_KEY = var.redis_stream_key
+    CONSUMER_GROUP   = var.consumer_group
+    CONSUMER_NAME    = var.consumer_name
+  }
+}

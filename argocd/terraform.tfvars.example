@@ -21,3 +21,7 @@ mariadb_password = "password"
 redis_host       = "HOST"
 redis_password   = "password"
 jwt_secret_key   = "your-secret-key-change-this-in-production-min-256-bits
+
+redis_stream_key = "redis_stream_key"
+consumer_group   = "consumer_group"
+consumer_name    = "consumer_name"
