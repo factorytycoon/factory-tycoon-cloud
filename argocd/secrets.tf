@@ -32,7 +32,7 @@ resource "kubernetes_secret" "sf_backend_secrets" {
 
 resource "kubernetes_secret" "sf_backend_websocket_secrets" {
   metadata {
-    name      = "sf-backend-sensor-secrets"
+    name      = "sf-backend-websocket-secrets"
     namespace = "default"
   }
 
