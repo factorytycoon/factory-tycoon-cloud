@@ -11,6 +11,8 @@ echo "Factory Tycoon Cloud destroy script"
 echo "=========================================="
 echo ""
 
+kubectl delete application factory-tycoon-ingress -n argocd
+
 for module in "${MODULES[@]}"; do
   echo "========== [$module] 제거 중... =========="
   
