@@ -10,7 +10,7 @@ resource "aws_iam_policy" "glb_s3_read" {
         Action = [
           "s3:GetObject"
         ]
-        Resource = "arn:aws:s3:::factory-tycoon-frontend2/*"
+        Resource = "arn:aws:s3:::factory-tycoon-frontend/*"
       }
     ]
   })

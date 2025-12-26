@@ -51,11 +51,11 @@ variable "redis_host" {
   type        = string
 }
 
-variable "redis_password" {
-  description = "Password for Redis"
-  type        = string
-  sensitive   = true
-}
+# variable "redis_password" {
+#   description = "Password for Redis"
+#   type        = string
+#   sensitive   = true
+# }
 
 variable "jwt_secret_key" {
   description = "Secret key for JWT"
@@ -83,4 +83,20 @@ variable "backend_redis_port" {
 variable "glb_server_port" {
   type    = string
   default = "8081"
+}
+
+# ---------- Redis Stream Configs ----------
+variable "redis_stream_key" {
+  description = "Redis stream key for backend consumer"
+  type        = string
+}
+
+variable "consumer_group" {
+  description = "Redis consumer group name"
+  type        = string
+}
+
+variable "consumer_name" {
+  description = "Redis consumer name"
+  type        = string
 }

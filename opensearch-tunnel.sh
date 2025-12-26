@@ -124,6 +124,7 @@ echo ""
 # 5. SSM 포트포워딩 시작
 echo -e "${YELLOW}🔗 포트포워딩 시작 중...${NC}"
 echo -e "${YELLOW}Ctrl+C를 눌러 종료할 수 있습니다.${NC}"
+echo -e "${GREEN}✅ localhost:9200/_dashboards${NC}"
 echo ""
 
 aws ssm start-session \

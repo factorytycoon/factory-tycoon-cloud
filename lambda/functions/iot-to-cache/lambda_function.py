@@ -1,7 +1,8 @@
 import json
 import os
 import redis
-import boto3
+ 
+import time
 
 # Redis 연결
 redis_client = redis.Redis(
@@ -10,49 +11,95 @@ redis_client = redis.Redis(
     decode_responses=True
 )
 
-sqs = boto3.client('sqs')
-MONGODB_QUEUE_URL = os.environ.get('MONGODB_QUEUE_URL')
-OPENSEARCH_QUEUE_URL = os.environ.get('OPENSEARCH_QUEUE_URL')
+ 
 
 def lambda_handler(event, context):
     """
-    IoT Core에서 받은 데이터를 ElastiCache에 저장
+    IoT Core에서 받은 표준화된 데이터(device_id, type, value 등)를 처리
+    Schema:
+      - device_id: 설비 ID (예: ft-pi-001)
+      - sensor_id: 센서 고유 ID (예: 001)
+      - type: 데이터 타입 (예: temp, humi, illu)
+      - value: 측정값 (float)
+      - unit: 단위
+      - timestamp: Epoch Time
     """
     try:
+        # 1. 데이터 수신 및 로그 확인
         print(f"Received event: {json.dumps(event)}")
-        
-        # IoT 메시지 파싱
-        # event 자체가 IoT 메시지 데이터
         data = event
         
-        # 센서 ID 추출 (데이터 구조에 따라 수정 필요)
-        sensor_id = data.get('sensor_id', 'unknown')
-        timestamp = data.get('timestamp', '')
+        # 2. 필드 추출 (새로운 스키마 적용)
+        device_id = data.get('device_id', 'unknown')   # 예: ft-pi-001
+        sensor_id = data.get('sensor_id', 'unknown')   # 예: 001
+        data_type = data.get('type', 'unknown')        # 예: temp, humi, illu
+        unit = data.get('unit', '')
         
-        # Redis에 저장
-        # 1. 최신 데이터를 Hash로 저장
-        redis_key = f"sensor:{sensor_id}:latest"
-        redis_client.hset(redis_key, mapping=data)
+        # value 처리 (None 방지)
+        raw_value = data.get('value')
+        value = float(raw_value) if raw_value is not None else 0.0
+
+        # Timestamp 처리
+        raw_timestamp = data.get('timestamp')
+        if raw_timestamp is not None:
+            timestamp = float(raw_timestamp)
+        else:
+            timestamp = time.time()
+            data['timestamp'] = int(timestamp)
+
+        print(f"Processing - Device: {device_id}, Type: {data_type}, Value: {value}")
+
+        # 3. Redis에 저장
         
-        # 2. 시계열 데이터를 Sorted Set에 저장
-        timeseries_key = f"sensor:{sensor_id}:timeseries"
-        redis_client.zadd(timeseries_key, {json.dumps(data): float(timestamp)})
+        # (A) 최신 상태 저장 (Hash) -> '현재 상태' 대시보드용
+        # 키 예시: device:ft-pi-001:latest
+        # 중요: 들어오는 키가 'value' 하나이므로, Redis에 저장할 때는 'temp', 'humi' 처럼 type 이름을 필드명으로 써야 덮어쓰지 않습니다.
+        redis_key_latest = f"device:{device_id}:latest"
         
-        # 3. 처리 대기 큐에 추가 (Lambda 2, 3에서 처리)
-        redis_client.lpush('pending:mongodb', json.dumps(data))
-        redis_client.lpush('pending:opensearch', json.dumps(data))
-        if MONGODB_QUEUE_URL:
-            sqs.send_message(QueueUrl=MONGODB_QUEUE_URL, MessageBody=json.dumps(data))
-        if OPENSEARCH_QUEUE_URL:
-            sqs.send_message(QueueUrl=OPENSEARCH_QUEUE_URL, MessageBody=json.dumps(data))
+        # Hash에 업데이트할 필드들 구성
+        # 예: temp 데이터가 오면 -> {'temp': 23.5, 'temp_unit': 'degree', 'last_update': 1766...} 저장
+        mapping_data = {
+            data_type: value,                 # 예: "temp": 23.55
+            f"{data_type}_unit": unit,        # 예: "temp_unit": "degree"
+            "sensor_id": sensor_id,           # 마지막으로 업데이트한 센서 ID
+            "last_updated": int(timestamp)    # 마지막 업데이트 시간
+        }
         
-        print(f"Successfully stored data for sensor {sensor_id}")
+        redis_client.hset(redis_key_latest, mapping=mapping_data)
+        
+        # (B) 시계열 데이터 저장 (Sorted Set) -> '그래프' 조회용
+        # 키 예시: device:ft-pi-001:timeseries
+        # 데이터 전체(JSON)를 저장하여 나중에 필터링 가능하게 함
+        redis_key_series = f"device:{device_id}:timeseries"
+        redis_client.zadd(redis_key_series, {json.dumps(data): timestamp})
+        
+        # 4. 처리 대기 큐에 추가 (MongoDB, OpenSearch 저장용)
+        message_body = json.dumps(data)
+        
+        # Redis Stream (권장)
+        redis_client.xadd(
+            'pending:mongodb_stream',
+            {'data': message_body},
+            maxlen=10000,
+            approximate=True
+        )
+        redis_client.xadd(
+            'pending:opensearch_stream',
+            {'data': message_body},
+            maxlen=10000,
+            approximate=True
+        )
+        # SQS 제거: Redis Stream만 사용
+        
+        print(f"Successfully stored data for {device_id} ({data_type})")
         
         return {
             'statusCode': 200,
             'body': json.dumps({
-                'message': 'Data stored successfully',
-                'sensor_id': sensor_id
+                'message': 'Data processed successfully',
+                'device_id': device_id,
+                'type': data_type,
+                'value': value
             })
         }
         

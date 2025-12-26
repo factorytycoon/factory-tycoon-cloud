@@ -16,9 +16,9 @@ resource "aws_cloudfront_distribution" "this" {
     "www.factorytycoon.net"
   ]
 
-  # ======================
+  # ====================== 
   # ORIGINS
-  # ======================
+  # ====================== 
 
   # S3 (Frontend)
   origin {
@@ -40,9 +40,9 @@ resource "aws_cloudfront_distribution" "this" {
     }
   }
 
-  # ======================
+  # ====================== 
   # ORDERED CACHE BEHAVIOR
-  # ======================
+  # ====================== 
 
   # API
   ordered_cache_behavior {
@@ -64,7 +64,7 @@ resource "aws_cloudfront_distribution" "this" {
 
     forwarded_values {
       query_string = true
-          headers      = [
+      headers      = [
         "Authorization",
         "Content-Type",
         "Host",
@@ -89,7 +89,7 @@ resource "aws_cloudfront_distribution" "this" {
 
     forwarded_values {
       query_string = true
-          headers      = [
+      headers      = [
         "Authorization",
         "Content-Type",
         "Host",
@@ -102,10 +102,50 @@ resource "aws_cloudfront_distribution" "this" {
       }
     }
   }
+  
+  ordered_cache_behavior {
+  path_pattern           = "/ws"
+  target_origin_id       = "alb-backend"
+  viewer_protocol_policy = "redirect-to-https"
+  allowed_methods        = ["GET", "HEAD", "OPTIONS"]
+  cached_methods         = ["GET", "HEAD"]
+  forwarded_values {
+    query_string = true
+    headers      = ["Authorization", "Content-Type", "Host", "Origin"]
+    cookies {
+      forward = "none"
+    }
+  }
+  min_ttl     = 0
+  default_ttl = 0
+  max_ttl     = 0
+}
 
-  # ======================
+    # WebSocket
+    ordered_cache_behavior {
+      path_pattern           = "/ws/*"
+      target_origin_id       = "alb-backend"
+      viewer_protocol_policy = "redirect-to-https"
+
+      allowed_methods = ["GET", "HEAD", "OPTIONS"]
+      cached_methods  = ["GET", "HEAD"]
+
+      forwarded_values {
+        query_string = true
+        headers      = ["Authorization", "Content-Type", "Host", "Origin"]
+        cookies {
+          forward = "none"
+        }
+      }
+
+      min_ttl     = 0
+      default_ttl = 0
+      max_ttl     = 0
+    }
+
+  # ====================== 
   # DEFAULT (Frontend SPA)
-  # ======================
+  # ====================== 
 
   default_cache_behavior {
     target_origin_id       = "s3-frontend"
@@ -122,9 +162,9 @@ resource "aws_cloudfront_distribution" "this" {
     }
   }
 
-  # ======================
+  # ====================== 
   # SPA FALLBACK
-  # ======================
+  # ====================== 
 
   custom_error_response {
     error_code            = 403
@@ -159,16 +199,16 @@ resource "aws_s3_bucket_policy" "frontend_policy" {
   bucket = data.aws_s3_bucket.frontend.id
 
   policy = jsonencode({
-    Version = "2012-10-17"
+    Version   = "2012-10-17"
     Statement = [
       {
-        Sid    = "AllowCloudFrontServicePrincipalReadOnly"
-        Effect = "Allow"
+        Sid       = "AllowCloudFrontServicePrincipalReadOnly"
+        Effect    = "Allow"
         Principal = {
           Service = "cloudfront.amazonaws.com"
         }
-        Action   = "s3:GetObject"
-        Resource = "${data.aws_s3_bucket.frontend.arn}/*"
+        Action    = "s3:GetObject"
+        Resource  = "${data.aws_s3_bucket.frontend.arn}/*"
         Condition = {
           StringEquals = {
             "AWS:SourceArn" = aws_cloudfront_distribution.this.arn

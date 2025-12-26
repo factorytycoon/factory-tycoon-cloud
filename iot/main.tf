@@ -53,51 +53,71 @@ resource "aws_iot_certificate" "device" {
 }
 
 # 4. IoT Policy 정의 (MQTT 권한) - 디바이스별
+# resource "aws_iot_policy" "device" {
+#   for_each = var.devices
+#   name     = "${var.project_name}-policy-${each.key}"
+
+#   policy = jsonencode({
+#     Version = "2012-10-17"
+#     Statement = [
+#       {
+#         Effect = "Allow"
+#         Action = [
+#           "iot:Connect"
+#         ]
+#         Resource = [
+#           "arn:aws:iot:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:client/${each.value.thing_name}"
+#         ]
+#       },
+#       {
+#         Effect = "Allow"
+#         Action = [
+#           "iot:Publish"
+#         ]
+#         Resource = [
+#           "arn:aws:iot:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:topic/${each.value.topic_prefix}/telemetry",
+#           "arn:aws:iot:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:topic/${each.value.topic_prefix}/status"
+#         ]
+#       },
+#       {
+#         Effect = "Allow"
+#         Action = [
+#           "iot:Subscribe"
+#         ]
+#         Resource = [
+#           "arn:aws:iot:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:topicfilter/${each.value.topic_prefix}/command"
+#         ]
+#       },
+#       {
+#         Effect = "Allow"
+#         Action = [
+#           "iot:Receive"
+#         ]
+#         Resource = [
+#           "arn:aws:iot:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:topic/${each.value.topic_prefix}/command"
+#         ]
+#       }
+#     ]
+#   })
+# }
 resource "aws_iot_policy" "device" {
   for_each = var.devices
   name     = "${var.project_name}-policy-${each.key}"
 
   policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "iot:Connect"
-        ]
-        Resource = [
-          "arn:aws:iot:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:client/${each.value.thing_name}"
-        ]
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "iot:Publish"
-        ]
-        Resource = [
-          "arn:aws:iot:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:topic/${each.value.topic_prefix}/telemetry",
-          "arn:aws:iot:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:topic/${each.value.topic_prefix}/status"
-        ]
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "iot:Subscribe"
-        ]
-        Resource = [
-          "arn:aws:iot:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:topicfilter/${each.value.topic_prefix}/command"
-        ]
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "iot:Receive"
-        ]
-        Resource = [
-          "arn:aws:iot:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:topic/${each.value.topic_prefix}/command"
-        ]
-      }
-    ]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "iot:Connect",
+        "iot:Publish",
+        "iot:Subscribe",
+        "iot:Receive"
+      ],
+      "Resource": "*"
+    }
+  ]
   })
 }
 

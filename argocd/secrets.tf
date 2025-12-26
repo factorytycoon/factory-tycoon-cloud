@@ -26,7 +26,22 @@ resource "kubernetes_secret" "sf_backend_secrets" {
     MARIADB_USERNAME = var.mariadb_username
     MARIADB_PASSWORD = var.mariadb_password
     REDIS_HOST       = var.redis_host
-    REDIS_PASSWORD   = var.redis_password
     JWT_SECRET_KEY   = var.jwt_secret_key
+  }
+}
+
+resource "kubernetes_secret" "sf_backend_websocket_secrets" {
+  metadata {
+    name      = "sf-backend-websocket-secrets"
+    namespace = "default"
+  }
+
+  type = "Opaque"
+
+  data = {
+    REDIS_HOST       = var.redis_host
+    REDIS_STREAM_KEY = var.redis_stream_key
+    CONSUMER_GROUP   = var.consumer_group
+    CONSUMER_NAME    = var.consumer_name
   }
 }
