@@ -9,6 +9,12 @@ resource "aws_cloudfront_distribution" "this" {
   enabled             = true
   default_root_object = "index.html"
   price_class         = "PriceClass_200"
+  web_acl_id          = aws_wafv2_web_acl.cloudfront_waf.arn
+
+  aliases = [
+    "factorytycoon.net",
+    "www.factorytycoon.net"
+  ]
 
   # ======================
   # ORIGINS
@@ -141,7 +147,9 @@ resource "aws_cloudfront_distribution" "this" {
   }
 
   viewer_certificate {
-    cloudfront_default_certificate = true
+    acm_certificate_arn      = aws_acm_certificate_validation.frontend.certificate_arn
+    ssl_support_method       = "sni-only"
+    minimum_protocol_version = "TLSv1.2_2021"
   }
 }
 
