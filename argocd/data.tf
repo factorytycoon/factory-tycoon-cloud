@@ -10,3 +10,12 @@ data "terraform_remote_state" "eks" {
     region = "ap-northeast-2"
   }
 }
+
+data "terraform_remote_state" "elasticache" {
+  backend = "s3"
+  config = {
+    bucket = "factory-tycoon-terraform-state" 
+    key    = "elasticache/terraform.tfstate"
+    region = "ap-northeast-2"
+  }
+}

@@ -25,7 +25,8 @@ resource "kubernetes_secret" "sf_backend_secrets" {
     MARIADB_URL      = var.mariadb_url
     MARIADB_USERNAME = var.mariadb_username
     MARIADB_PASSWORD = var.mariadb_password
-    REDIS_HOST       = var.redis_host
+    REDIS_HOST       = data.terraform_remote_state.elasticache.outputs.redis_primary_endpoint
+    REDIS_PASSWORD   = data.terraform_remote_state.elasticache.outputs.redis_password
     JWT_SECRET_KEY   = var.jwt_secret_key
   }
 }
@@ -39,7 +40,8 @@ resource "kubernetes_secret" "sf_backend_websocket_secrets" {
   type = "Opaque"
 
   data = {
-    REDIS_HOST       = var.redis_host
+    REDIS_HOST       = data.terraform_remote_state.elasticache.outputs.redis_primary_endpoint
+    REDIS_PASSWORD   = data.terraform_remote_state.elasticache.outputs.redis_password
     REDIS_STREAM_KEY = var.redis_stream_key
     CONSUMER_GROUP   = var.consumer_group
     CONSUMER_NAME    = var.consumer_name
