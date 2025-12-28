@@ -4,7 +4,7 @@ set -e
 
 START_TIME=$SECONDS
 
-MODULES=("vpc" "security-groups" "eks")
+MODULES=("vpc" "security-groups" "eks" "elasticache" "iot" "opensearch" "lambda")
 
 echo "=========================================="
 echo "Factory Tycoon Cloud deploy script"
@@ -56,25 +56,25 @@ cd ..
 echo "[argocd] bootstrap 완료"
 echo ""
 
-REMAINING_MODULES=("elasticache" "iot" "opensearch" "lambda")
+# REMAINING_MODULES=( )
 
-for module in "${REMAINING_MODULES[@]}"; do
-  echo "========== [$module] 배포 중... =========="
+# for module in "${REMAINING_MODULES[@]}"; do
+#   echo "========== [$module] 배포 중... =========="
 
-  cd "$module"
+#   cd "$module"
 
-  if [ "$module" = "lambda" ] && [ -f "build.sh" ]; then
-    echo "→ Lambda 의존성 빌드 중..."
-    ./build.sh
-  fi
+#   if [ "$module" = "lambda" ] && [ -f "build.sh" ]; then
+#     echo "→ Lambda 의존성 빌드 중..."
+#     ./build.sh
+#   fi
 
-  terraform init -reconfigure
-  terraform plan -out=tfplan
-  terraform apply -auto-approve tfplan
+#   terraform init -reconfigure
+#   terraform plan -out=tfplan
+#   terraform apply -auto-approve tfplan
 
-  rm -f tfplan
-  cd ..
+#   rm -f tfplan
+#   cd ..
 
-  echo "[$module] 배포 완료"
-  echo ""
-done
+#   echo "[$module] 배포 완료"
+#   echo ""
+# done
