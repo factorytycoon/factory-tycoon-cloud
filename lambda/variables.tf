@@ -4,17 +4,22 @@ variable "project" {
   default     = "factory-tycoon"
 }
 
-# variable "redis_endpoint" {
-#   description = "ElastiCache Redis endpoint"
-#   type        = string
-#   default     = data.terraform_remote_state.elasticache.outputs.redis_primary_endpoint
-# }
+variable "redis_endpoint_local" {
+  description = "ElastiCache Redis endpoint"
+  type        = string
+  default     = "localhost"
+}
 
-# variable "redis_port" {
-#   description = "ElastiCache Redis port"
-#   type        = number
-#   default     = 6379
-# }
+variable "redis_port_local" {
+  description = "ElastiCache Redis port"
+  type        = number
+  default     = 6379
+}
+variable "redis_password_local" {
+  description = "ElastiCache Redis password"
+  type        = string
+  default     = "password"
+}
 
 variable "mongodb_uri" {
   description = "MongoDB connection URI"

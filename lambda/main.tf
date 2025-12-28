@@ -84,8 +84,12 @@ resource "aws_lambda_function" "iot_to_cache" {
 
   environment {
     variables = {
-      REDIS_ENDPOINT = data.terraform_remote_state.elasticache.outputs.redis_primary_endpoint
-      REDIS_PORT     = data.terraform_remote_state.elasticache.outputs.redis_port
+      REDIS_ENDPOINT       = data.terraform_remote_state.elasticache.outputs.redis_primary_endpoint
+      REDIS_PORT           = data.terraform_remote_state.elasticache.outputs.redis_port
+      REDIS_PASSWORD       = data.terraform_remote_state.elasticache.outputs.redis_password
+      REDIS_ENDPOINT_LOCAL = var.redis_endpoint_local
+      REDIS_PORT_LOCAL     = var.redis_port_local
+      REDIS_PASSWORD_LOCAL = var.redis_password_local
     }
   }
 
@@ -123,6 +127,7 @@ resource "aws_lambda_function" "cache_to_mongodb" {
     variables = {
       REDIS_ENDPOINT = data.terraform_remote_state.elasticache.outputs.redis_primary_endpoint
       REDIS_PORT     = data.terraform_remote_state.elasticache.outputs.redis_port
+      REDIS_PASSWORD = data.terraform_remote_state.elasticache.outputs.redis_password
       MONGODB_URI    = var.mongodb_uri
       MONGODB_DB     = var.mongodb_database
     }
@@ -162,6 +167,7 @@ resource "aws_lambda_function" "cache_to_opensearch" {
     variables = {
       REDIS_ENDPOINT           = data.terraform_remote_state.elasticache.outputs.redis_primary_endpoint
       REDIS_PORT               = data.terraform_remote_state.elasticache.outputs.redis_port
+      REDIS_PASSWORD           = data.terraform_remote_state.elasticache.outputs.redis_password
       OPENSEARCH_ENDPOINT      = data.terraform_remote_state.opensearch.outputs.endpoint
       OPENSEARCH_MASTER_USER   = data.terraform_remote_state.opensearch.outputs.master_user_name
       OPENSEARCH_MASTER_PASSWORD = data.terraform_remote_state.opensearch.outputs.master_user_password
