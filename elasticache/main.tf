@@ -54,8 +54,10 @@ resource "aws_elasticache_replication_group" "redis" {
 
   # 암호화 (선택사항, 비용 고려)
   at_rest_encryption_enabled = false
-  transit_encryption_enabled = false
-
+  transit_encryption_enabled = true
+  transit_encryption_mode    = "required"
+  apply_immediately          = true
+  
   # 백업 설정
   snapshot_retention_limit = 1
   snapshot_window          = "03:00-05:00"
@@ -63,6 +65,9 @@ resource "aws_elasticache_replication_group" "redis" {
 
   # 자동 업그레이드
   auto_minor_version_upgrade = true
+
+  # Redis 패스워드 적용 (auth_token)
+  auth_token = var.redis_auth_token != null ? var.redis_auth_token : null
 
   tags = merge(
     var.common_tags,

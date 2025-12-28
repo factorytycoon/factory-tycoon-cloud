@@ -53,3 +53,11 @@ variable "common_tags" {
     Env     = "dev"
   }
 }
+
+# Redis 패스워드(암호) 변수
+variable "redis_auth_token" {
+  type        = string
+  description = "(선택) Redis 인증 토큰(패스워드). 지정 시 Redis requirepass 활성화."
+  default     = null
+  sensitive   = true
+}
