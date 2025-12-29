@@ -1,1 +1,4 @@
-alb_dns_name = "ALB_DNS_NAME"
+# Optional:
+# - If omitted, Terraform will try to discover the ALB created by the Kubernetes Ingress via AWS tags.
+# - If discovery fails (e.g., Ingress not ready yet), set this explicitly.
+# alb_dns_name = "k8s-default-factoryi-xxxx.ap-northeast-2.elb.amazonaws.com"
