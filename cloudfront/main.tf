@@ -29,7 +29,7 @@ resource "aws_cloudfront_distribution" "this" {
 
   # ALB (Backend)
   origin {
-    domain_name = var.alb_dns_name
+    domain_name = local.alb_dns_name
     origin_id   = "alb-backend"
 
     custom_origin_config {
@@ -191,9 +191,14 @@ resource "aws_cloudfront_distribution" "this" {
     ssl_support_method       = "sni-only"
     minimum_protocol_version = "TLSv1.2_2021"
   }
+
+  lifecycle {
+    precondition {
+      condition     = local.alb_dns_name != null && local.alb_dns_name != ""
+      error_message = "Could not resolve ALB DNS name. Discovered ${length(local.factory_ingress_lb_arns)} matching LB(s) for ingress ${var.ingress_namespace}/${var.ingress_name}. If 0, wait until Ingress provisions an ALB (or tags mismatch). If >1, delete leftover LBs or set `alb_dns_name` explicitly (e.g., in `cloudfront/terraform.tfvars`)."
+    }
+  }
 }
-
-
 
 resource "aws_s3_bucket_policy" "frontend_policy" {
   bucket = data.aws_s3_bucket.frontend.id
