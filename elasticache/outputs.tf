@@ -17,9 +17,3 @@ output "redis_connection_string" {
   value       = "${aws_elasticache_replication_group.redis.primary_endpoint_address}:${var.redis_port}"
   description = "Redis 연결 문자열"
 }
-
-output "redis_password" {
-  value       = var.redis_auth_token
-  description = "(선택) Redis 인증 토큰(패스워드)"
-  sensitive   = true
-}
