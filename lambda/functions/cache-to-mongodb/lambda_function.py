@@ -48,25 +48,32 @@ def lambda_handler(event, context):
         # 3. MongoDB에 저장
         if records:
             docs_to_insert = []
-            
             for data in records:
                 try:
-                    # (A) 값(value)을 실수형으로 확실하게 변환
-                    if 'value' in data:
-                        data['value'] = float(data['value'])
-
-                    # [삭제됨] type에 따라 별도 필드(temp, humi 등)를 만드는 코드 삭제함
-                    # 이제 무조건 'value' 필드 하나에 값만 들어갑니다.
-
-                    # (B) 날짜 변환 (Epoch -> ISODate)
-                    if 'timestamp' in data:
-                        data['timestamp_dt'] = datetime.fromtimestamp(float(data['timestamp']), tz=timezone.utc)
-                    
-                    # (C) 데이터 처리 시간 기록
-                    data['processed_at'] = datetime.now(timezone.utc)
-                    
-                    docs_to_insert.append(data)
-                    
+                    # 새 포맷: sensors 리스트가 있으면 센서별로 분해
+                    if 'sensors' in data and isinstance(data['sensors'], list):
+                        device_id = data.get('device_id')
+                        timestamp = data.get('timestamp')
+                        for sensor in data['sensors']:
+                            doc = {
+                                'device_id': device_id,
+                                'timestamp': timestamp,
+                                'sensor_id': sensor.get('sensor_id'),
+                                'type': sensor.get('type'),
+                                'value': float(sensor.get('value', 0)),
+                                'unit': sensor.get('unit'),
+                                'timestamp_dt': datetime.fromtimestamp(float(timestamp), tz=timezone.utc),
+                                'processed_at': datetime.now(timezone.utc)
+                            }
+                            docs_to_insert.append(doc)
+                    else:
+                        # 기존 포맷 처리
+                        if 'value' in data:
+                            data['value'] = float(data['value'])
+                        if 'timestamp' in data:
+                            data['timestamp_dt'] = datetime.fromtimestamp(float(data['timestamp']), tz=timezone.utc)
+                        data['processed_at'] = datetime.now(timezone.utc)
+                        docs_to_insert.append(data)
                 except Exception as parse_error:
                     print(f"Error parsing record: {parse_error}")
 
