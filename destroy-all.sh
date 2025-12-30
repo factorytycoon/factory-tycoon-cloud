@@ -4,7 +4,7 @@ set -e  # 에러 발생 시 즉시 종료
 
 START_TIME=$SECONDS
 
-MODULES=("lambda" "opensearch" "iot" "elasticache" "argocd" "eks" "security-groups" "vpc")
+MODULES=("argocd" "lambda" "opensearch" "iot" "elasticache" "eks" "security-groups" "vpc")
 
 echo "=========================================="
 echo "Factory Tycoon Cloud destroy script"

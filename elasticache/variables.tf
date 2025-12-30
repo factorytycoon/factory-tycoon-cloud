@@ -17,7 +17,7 @@ variable "allowed_cidr_blocks" {
 
 variable "redis_node_type" {
   type    = string
-  default = "cache.t3.micro"
+  default = "cache.t3.medium"
   description = "Redis 노드 타입"
 }
 
@@ -52,4 +52,12 @@ variable "common_tags" {
     Module  = "elasticache"
     Env     = "dev"
   }
+}
+
+# Redis 패스워드(암호) 변수
+variable "redis_auth_token" {
+  type        = string
+  description = "(선택) Redis 인증 토큰(패스워드). 지정 시 Redis requirepass 활성화."
+  default     = null
+  sensitive   = true
 }

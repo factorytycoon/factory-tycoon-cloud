@@ -14,18 +14,20 @@ variable "aws_region" {
   default = "ap-northeast-2"
 }
 
-# ---------- GLB Secrets ----------
-variable "glb_aws_access_key_id" {
+# ---------- AWS Secrets ----------
+variable "aws_aws_access_key_id" {
   type      = string
+  default   = null
   sensitive = true
 }
 
-variable "glb_aws_secret_access_key" {
+variable "aws_aws_secret_access_key" {
   type      = string
+  default   = null
   sensitive = true
 }
 
-variable "glb_s3_bucket" {
+variable "aws_s3_bucket" {
   type = string
 }
 
@@ -46,14 +48,15 @@ variable "mariadb_password" {
   sensitive   = true
 }
 
-variable "redis_host" {
-  description = "Host address for Redis"
-  type        = string
-}
+# variable "redis_host" {
+#   description = "Host address for Redis"
+#   type        = string
+# }
 
 # variable "redis_password" {
 #   description = "Password for Redis"
 #   type        = string
+#   default     = ""
 #   sensitive   = true
 # }
 
@@ -79,8 +82,8 @@ variable "backend_redis_port" {
   default = "6379"
 }
 
-# ---------- GLB Configs ----------
-variable "glb_server_port" {
+# ---------- AWS Configs ----------
+variable "aws_server_port" {
   type    = string
   default = "8081"
 }

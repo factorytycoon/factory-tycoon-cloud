@@ -55,7 +55,7 @@ resource "aws_elasticache_replication_group" "redis" {
   # 암호화 (선택사항, 비용 고려)
   at_rest_encryption_enabled = false
   transit_encryption_enabled = false
-
+  
   # 백업 설정
   snapshot_retention_limit = 1
   snapshot_window          = "03:00-05:00"
