@@ -21,5 +21,5 @@ output "redis_connection_string" {
 output "redis_password" {
   value       = var.redis_auth_token
   description = "(선택) Redis 인증 토큰(패스워드)"
-  # sensitive   = true
+  sensitive   = true
 }

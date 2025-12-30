@@ -16,16 +16,7 @@ output "devices" {
   description = "디바이스 목록 및 정보"
 }
 
-output "certificates" {
-  value = {
-    for key, device in var.devices : key => {
-      certificate_pem = tls_self_signed_cert.device[key].cert_pem
-      private_key_pem = tls_private_key.device[key].private_key_pem
-    }
-  }
-  sensitive   = true
-  description = "디바이스별 인증서 및 개인키 (민감 정보)"
-}
+
 
 output "mqtt_topics" {
   value = {
@@ -41,8 +32,8 @@ output "mqtt_topics" {
 output "certificate_paths" {
   value = {
     for key, device in var.devices : key => {
-      certificate = local_file.device_certificate[key].filename
-      private_key = local_file.device_private_key[key].filename
+      certificate = data.local_file.device_certificate[key].filename
+      private_key = data.local_file.device_private_key[key].filename
       config      = local_file.iot_config[key].filename
       directory   = "${path.module}/certs/${key}"
     }

@@ -1,15 +1,15 @@
-resource "kubernetes_secret" "sf_backend_glb_secrets" {
+resource "kubernetes_secret" "sf_backend_aws_secrets" {
   metadata {
-    name      = "sf-backend-glb-secrets"
+    name      = "sf-backend-aws-secrets"
     namespace = "default"
   }
 
   type = "Opaque"
 
   data = {
-    AWS_ACCESS_KEY = var.glb_aws_access_key_id
-    AWS_SECRET_KEY = var.glb_aws_secret_access_key
-    AWS_BUCKET     = var.glb_s3_bucket
+    # AWS_ACCESS_KEY = var.aws_aws_access_key_id
+    # AWS_SECRET_KEY = var.aws_aws_secret_access_key
+    AWS_BUCKET     = var.aws_s3_bucket
   }
 }
 

@@ -1,10 +1,10 @@
-resource "kubernetes_manifest" "argocd_backend_glb_app" {
+resource "kubernetes_manifest" "argocd_backend_aws_app" {
   manifest = {
     apiVersion = "argoproj.io/v1alpha1"
     kind       = "Application"
 
     metadata = {
-      name      = "factory-tycoon-backend-glb"
+      name      = "factory-tycoon-backend-aws"
       namespace = "argocd"
     }
 
@@ -14,7 +14,7 @@ resource "kubernetes_manifest" "argocd_backend_glb_app" {
       source = {
         repoURL        = "https://github.com/lgcns5team/factory-tycoon-k8s"
         targetRevision = "main"
-        path           = "be-glb"   
+        path           = "be-aws"   
       }
 
       destination = {

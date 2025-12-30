@@ -80,7 +80,7 @@ resource "aws_cloudfront_distribution" "this" {
 
   # GLB API
   ordered_cache_behavior {
-    path_pattern           = "/glb/*"
+    path_pattern           = "/aws/*"
     target_origin_id       = "alb-backend"
     viewer_protocol_policy = "redirect-to-https"
 

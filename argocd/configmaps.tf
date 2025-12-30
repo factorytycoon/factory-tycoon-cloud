@@ -12,14 +12,14 @@ resource "kubernetes_config_map" "sf_backend_config" {
   }
 }
 
-resource "kubernetes_config_map" "sf_backend_glb_config" {
+resource "kubernetes_config_map" "sf_backend_aws_config" {
   metadata {
-    name      = "sf-backend-glb-config"
+    name      = "sf-backend-aws-config"
     namespace = "default"
   }
 
   data = {
-    SERVER_PORT = var.glb_server_port
+    SERVER_PORT = var.aws_server_port
     AWS_REGION  = var.aws_region
   }
 }

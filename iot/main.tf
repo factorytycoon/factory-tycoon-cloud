@@ -15,41 +15,28 @@ resource "aws_iot_thing" "device" {
   }
 }
 
-# 2. 디바이스 인증서 생성 (자체 서명)
-resource "tls_private_key" "device" {
-  for_each  = var.devices
-  algorithm = "RSA"
-  rsa_bits  = 2048
+
+# 2. 수동 생성된 인증서/키 파일 참조
+data "local_file" "device_certificate" {
+  for_each = var.devices
+  filename = "${path.module}/certs/${each.key}/certificate.pem"
 }
 
-resource "tls_self_signed_cert" "device" {
-  for_each        = var.devices
-  private_key_pem = tls_private_key.device[each.key].private_key_pem
-
-  subject {
-    common_name = each.value.thing_name
-  }
-
-  validity_period_hours = 87600 # 10년
-
-  allowed_uses = [
-    "key_encipherment",
-    "digital_signature",
-  ]
+data "local_file" "device_private_key" {
+  for_each = var.devices
+  filename = "${path.module}/certs/${each.key}/private-key.pem"
 }
 
-# 3. AWS IoT에 인증서 등록
+# 3. AWS IoT에 인증서 등록 (수동 인증서 사용)
 resource "aws_iot_certificate" "device" {
   for_each        = var.devices
-  certificate_pem = tls_self_signed_cert.device[each.key].cert_pem
+  certificate_pem = data.local_file.device_certificate[each.key].content
   ca_pem          = ""
   active          = true
 
   lifecycle {
     create_before_destroy = false
   }
-
-  depends_on = [tls_self_signed_cert.device]
 }
 
 # 4. IoT Policy 정의 (MQTT 권한) - 디바이스별
@@ -145,28 +132,8 @@ data "http" "aws_root_ca" {
   url = "https://www.amazontrust.com/repository/AmazonRootCA1.pem"
 }
 
-# 9. 라즈베리파이용 인증서 파일 자동 생성
-resource "local_file" "device_certificate" {
-  for_each        = var.devices
-  content         = tls_self_signed_cert.device[each.key].cert_pem
-  filename        = "${path.module}/certs/${each.key}/certificate.pem"
-  file_permission = "0400"
 
-  lifecycle {
-    ignore_changes = [content]
-  }
-}
-
-resource "local_file" "device_private_key" {
-  for_each        = var.devices
-  content         = tls_private_key.device[each.key].private_key_pem
-  filename        = "${path.module}/certs/${each.key}/private-key.pem"
-  file_permission = "0400"
-
-  lifecycle {
-    ignore_changes = [content]
-  }
-}
+# 9. 라즈베리파이용 CA 파일 자동 생성 (AWS Root CA)
 
 resource "local_file" "aws_root_ca" {
   for_each        = var.devices
@@ -179,7 +146,7 @@ resource "local_file" "aws_root_ca" {
   }
 }
 
-# 10. 라즈베리파이 연결 설정 파일 자동 생성
+# 10. 라즈베리파이 연결 설정 파일 자동 생성 (config.json)
 resource "local_file" "iot_config" {
   for_each    = var.devices
   content = jsonencode({
