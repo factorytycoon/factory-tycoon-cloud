@@ -8,13 +8,6 @@ import time
 redis_client = redis.Redis(
     host=os.environ['REDIS_ENDPOINT'],
     port=int(os.environ['REDIS_PORT']),
-    password=os.environ['REDIS_PASSWORD'],
-    decode_responses=True
-)
-redis_client_local = redis.Redis(
-    host=os.environ['REDIS_ENDPOINT_LOCAL'],
-    port=int(os.environ['REDIS_PORT_LOCAL']),
-    password=os.environ['REDIS_PASSWORD_LOCAL'],
     decode_responses=True
 )
 
@@ -73,14 +66,12 @@ def lambda_handler(event, context):
         }
         
         redis_client.hset(redis_key_latest, mapping=mapping_data)
-        redis_client_local.hset(redis_key_latest, mapping=mapping_data)
         
         # (B) 시계열 데이터 저장 (Sorted Set) -> '그래프' 조회용
         # 키 예시: device:ft-pi-001:timeseries
         # 데이터 전체(JSON)를 저장하여 나중에 필터링 가능하게 함
         redis_key_series = f"device:{device_id}:timeseries"
         redis_client.zadd(redis_key_series, {json.dumps(data): timestamp})
-        redis_client_local.zadd(redis_key_series, {json.dumps(data): timestamp})
         
         # 4. 처리 대기 큐에 추가 (MongoDB, OpenSearch 저장용)
         message_body = json.dumps(data)
@@ -93,18 +84,6 @@ def lambda_handler(event, context):
             approximate=True
         )
         redis_client.xadd(
-            'pending:opensearch_stream',
-            {'data': message_body},
-            maxlen=10000,
-            approximate=True
-        )
-        redis_client_local.xadd(
-            'pending:mongodb_stream',
-            {'data': message_body},
-            maxlen=10000,
-            approximate=True
-        )
-        redis_client_local.xadd(
             'pending:opensearch_stream',
             {'data': message_body},
             maxlen=10000,

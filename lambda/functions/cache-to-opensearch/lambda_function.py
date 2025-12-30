@@ -8,7 +8,6 @@ from opensearchpy import OpenSearch, RequestsHttpConnection
 redis_client = redis.Redis(
     host=os.environ['REDIS_ENDPOINT'],
     port=int(os.environ['REDIS_PORT']),
-    password=os.environ['REDIS_PASSWORD'],
     decode_responses=True,
 )
 
