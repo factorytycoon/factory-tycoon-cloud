@@ -7,8 +7,8 @@ resource "kubernetes_secret" "sf_backend_aws_secrets" {
   type = "Opaque"
 
   data = {
-    # AWS_ACCESS_KEY = var.aws_aws_access_key_id
-    # AWS_SECRET_KEY = var.aws_aws_secret_access_key
+    AWS_ACCESS_KEY = var.aws_aws_access_key_id
+    AWS_SECRET_KEY = var.aws_aws_secret_access_key
     AWS_BUCKET     = var.aws_s3_bucket
   }
 }
