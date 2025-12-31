@@ -84,7 +84,15 @@ resource "aws_cloudfront_distribution" "this" {
     target_origin_id       = "alb-backend"
     viewer_protocol_policy = "redirect-to-https"
 
-    allowed_methods = ["GET", "HEAD", "OPTIONS"]
+    allowed_methods = [
+      "GET",
+      "HEAD",
+      "OPTIONS",
+      "PUT",
+      "POST",
+      "PATCH",
+      "DELETE"
+    ]
     cached_methods  = ["GET", "HEAD"]
 
     forwarded_values {
