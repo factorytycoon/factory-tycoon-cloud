@@ -7,9 +7,9 @@ aws_region = "ap-northeast-2"
 # (s3 = factory-tycoon : lg_cns_5team)
 # (s3 = factory-tycoon2 : lyj2174)
 
-glb_aws_access_key_id     = "cns_key"
-glb_aws_secret_access_key = "cns_secret_key"
-glb_s3_bucket             = "s3_name"
+aws_aws_access_key_id = "cns_key"
+aws_aws_secret_access_key = "cns_secret_key"
+aws_s3_bucket = "s3_name"
 
 
 # Backend Secrets
@@ -18,8 +18,6 @@ glb_s3_bucket             = "s3_name"
 mariadb_url      = "jdbc:mysql://HOST:PORT/DATABASE"
 mariadb_username = "username"
 mariadb_password = "password"
-redis_host       = "HOST"
-redis_password   = "password"
 jwt_secret_key   = "your-secret-key-change-this-in-production-min-256-bits
 
 redis_stream_key = "redis_stream_key"
