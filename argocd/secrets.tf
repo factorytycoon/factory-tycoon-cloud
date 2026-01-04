@@ -7,9 +7,10 @@ resource "kubernetes_secret_v1" "sf_backend_aws_secrets" {
   type = "Opaque"
 
   data = {
-    AWS_ACCESS_KEY = var.aws_aws_access_key_id
-    AWS_SECRET_KEY = var.aws_aws_secret_access_key
-    AWS_BUCKET     = var.aws_s3_bucket
+    # IRSA 사용으로 Access Key 제거
+    # AWS_ACCESS_KEY = var.aws_aws_access_key_id
+    # AWS_SECRET_KEY = var.aws_aws_secret_access_key
+    AWS_BUCKET = var.aws_s3_bucket
   }
 }
 
