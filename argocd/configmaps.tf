@@ -1,4 +1,4 @@
-resource "kubernetes_config_map" "sf_backend_config" {
+resource "kubernetes_config_map_v1" "sf_backend_config" {
   metadata {
     name      = "sf-backend-config"
     namespace = "default"
@@ -12,7 +12,7 @@ resource "kubernetes_config_map" "sf_backend_config" {
   }
 }
 
-resource "kubernetes_config_map" "sf_backend_aws_config" {
+resource "kubernetes_config_map_v1" "sf_backend_aws_config" {
   metadata {
     name      = "sf-backend-aws-config"
     namespace = "default"
@@ -23,3 +23,14 @@ resource "kubernetes_config_map" "sf_backend_aws_config" {
     AWS_REGION  = var.aws_region
   }
 }
+
+resource "kubernetes_config_map_v1" "sf_backend_websocket_config" {
+  metadata {
+    name      = "sf-backend-websocket-config"
+    namespace = "default"
+  }
+
+  data = {
+  }
+}
+

@@ -14,7 +14,14 @@ resource "kubernetes_manifest" "argocd_backend_websocket_app" {
       source = {
         repoURL        = "https://github.com/lgcns5team/factory-tycoon-k8s"
         targetRevision = "main"
-        path           = "be-websocket"   
+        path           = "helm/factory-tycoon-websocket"
+        helm = {
+          releaseName = "factory-tycoon-websocket"
+          valueFiles = [
+            "values.yaml",
+            "values-prod.yaml"
+          ]
+        }
       }
 
       destination = {

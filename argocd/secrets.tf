@@ -1,4 +1,4 @@
-resource "kubernetes_secret" "sf_backend_aws_secrets" {
+resource "kubernetes_secret_v1" "sf_backend_aws_secrets" {
   metadata {
     name      = "sf-backend-aws-secrets"
     namespace = "default"
@@ -13,7 +13,7 @@ resource "kubernetes_secret" "sf_backend_aws_secrets" {
   }
 }
 
-resource "kubernetes_secret" "sf_backend_secrets" {
+resource "kubernetes_secret_v1" "sf_backend_secrets" {
   metadata {
     name      = "sf-backend-secrets"
     namespace = "default"
@@ -30,7 +30,7 @@ resource "kubernetes_secret" "sf_backend_secrets" {
   }
 }
 
-resource "kubernetes_secret" "sf_backend_websocket_secrets" {
+resource "kubernetes_secret_v1" "sf_backend_websocket_secrets" {
   metadata {
     name      = "sf-backend-websocket-secrets"
     namespace = "default"

@@ -11,7 +11,14 @@ resource "kubernetes_manifest" "argocd_backend_app" {
       source = {
         repoURL        = "https://github.com/lgcns5team/factory-tycoon-k8s"
         targetRevision = "main"
-        path           = "be-factory"
+        path           = "helm/factory-tycoon-backend"
+        helm = {
+          releaseName = "factory-tycoon-backend"
+          valueFiles = [
+            "values.yaml",
+            "values-prod.yaml"
+          ]
+        }
       }
       destination = {
         server    = "https://kubernetes.default.svc"
