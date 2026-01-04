@@ -7,8 +7,6 @@ aws_region = "ap-northeast-2"
 # (s3 = factory-tycoon : lg_cns_5team)
 # (s3 = factory-tycoon2 : lyj2174)
 
-aws_aws_access_key_id = "cns_key"
-aws_aws_secret_access_key = "cns_secret_key"
 aws_s3_bucket = "s3_name"
 
 
