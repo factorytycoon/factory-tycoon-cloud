@@ -19,6 +19,27 @@ resource "aws_iam_policy" "aws_s3_read" {
   })
 }
 
+# ---------- IAM Policy (Bedrock for AI) ----------
+resource "aws_iam_policy" "aws_bedrock_access" {
+  name        = "sf-backend-aws-bedrock-access"
+  description = "Allow access to AWS Bedrock for AI features"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          # "bedrock:InvokeModel",
+          # "bedrock:InvokeModelWithResponseStream
+          "bedrock:*"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
 # ---------- IRSA Role ----------
 module "aws_irsa" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
@@ -27,7 +48,8 @@ module "aws_irsa" {
   role_name = "sf-backend-aws-irsa"
 
   role_policy_arns = {
-    s3 = aws_iam_policy.aws_s3_read.arn
+    s3      = aws_iam_policy.aws_s3_read.arn
+    bedrock = aws_iam_policy.aws_bedrock_access.arn
   }
 
   oidc_providers = {
