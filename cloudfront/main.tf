@@ -104,7 +104,7 @@ resource "aws_cloudfront_distribution" "this" {
         "Origin",
         "Access-Control-Request-Method",
         "Access-Control-Request-Headers"
-            ]
+        ]
       cookies {
         forward = "all"
       }
