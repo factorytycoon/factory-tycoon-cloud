@@ -29,14 +29,56 @@ for module in "${MODULES[@]}"; do
   echo "→ terraform init -reconfigure"
   terraform init -reconfigure
 
-  echo "→ terraform plan"
-  terraform plan -out=tfplan
+  if [ "$module" = "eks" ]; then
+    echo "→ terraform apply (stage 1: EKS/IRSA/kubeconfig)"
+    terraform apply -auto-approve \
+      -target=module.eks \
+      -target=aws_iam_policy.alb_controller \
+      -target=module.alb_irsa \
+      -target=null_resource.update_kubeconfig
 
-  echo "→ terraform apply"
-  terraform apply -auto-approve tfplan
+    CLUSTER_NAME="$(terraform output -raw cluster_name 2>/dev/null)"
+    AWS_REGION="$(awk -F'\"' '/^[[:space:]]*aws_region[[:space:]]*=/{print $2}' terraform.tfvars 2>/dev/null)"
 
-  rm -f tfplan
-  cd ..
+    cd ..
+
+    if [ -n "$CLUSTER_NAME" ] && [ -n "$AWS_REGION" ]; then
+      echo "→ wait: EKS cluster active ($CLUSTER_NAME, $AWS_REGION)"
+      aws eks wait cluster-active --name "$CLUSTER_NAME" --region "$AWS_REGION"
+
+      echo "→ wait: Kubernetes API ready"
+      set +e
+      for i in {1..30}; do
+        kubectl get ns >/dev/null 2>&1
+        if [ $? -eq 0 ]; then
+          break
+        fi
+        sleep 10
+      done
+      kubectl get ns >/dev/null 2>&1
+      if [ $? -ne 0 ]; then
+        echo "Kubernetes API not ready after waiting; aborting."
+        exit 1
+      fi
+      set -e
+    else
+      echo "EKS wait skipped (could not determine cluster_name/aws_region)"
+    fi
+
+    cd "$module"
+    echo "→ terraform apply (stage 2: remaining, incl. aws-load-balancer-controller)"
+    terraform apply -auto-approve
+    cd ..
+  else
+    echo "→ terraform plan"
+    terraform plan -out=tfplan
+
+    echo "→ terraform apply"
+    terraform apply -auto-approve tfplan
+
+    rm -f tfplan
+    cd ..
+  fi
 
   echo "[$module] 배포 완료"
   echo ""
