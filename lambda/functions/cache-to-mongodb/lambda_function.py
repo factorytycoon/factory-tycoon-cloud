@@ -34,7 +34,7 @@ def lambda_handler(event, context):
                 if 'BUSYGROUP' not in str(e):
                     raise
             batch_size = 1000
-            resp = redis_client.xreadgroup(group_name, consumer_name, {stream_name: '>'}, count=batch_size, block=2000)
+            resp = redis_client.xreadgroup(group_name, consumer_name, {stream_name: '>'}, count=batch_size, block=0)
             for stream, messages in resp:
                 for msg_id, msg in messages:
                     data_json = msg.get('data')
