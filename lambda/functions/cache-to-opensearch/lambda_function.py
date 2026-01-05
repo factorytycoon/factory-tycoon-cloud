@@ -62,7 +62,7 @@ def lambda_handler(event, context):
             except redis.exceptions.ResponseError as e:
                 if 'BUSYGROUP' not in str(e):
                     raise
-            batch_size = 50
+            batch_size = 1000
             resp = redis_client.xreadgroup(group_name, consumer_name, {stream_name: '>'}, count=batch_size, block=2000)
             for stream, messages in resp:
                 for msg_id, msg in messages:
@@ -74,27 +74,38 @@ def lambda_handler(event, context):
                             pass
                     redis_client.xack(stream_name, group_name, msg_id)
 
-        # 3. 데이터 저장
-        for data in records:
-            try:
-                # (A) Timestamp 변환
-                if 'timestamp' in data:
-                    ts_val = float(data['timestamp'])
-                    data['timestamp'] = datetime.fromtimestamp(ts_val, tz=timezone.utc).isoformat()
-                
-                # (B) 값 변환 (실수형)
-                if 'value' in data:
-                    data['value'] = float(data['value'])
+        # 3. 데이터 저장 (Bulk API 사용)
+        if records:
+            operations = []
+            for data in records:
+                try:
+                    # (A) Timestamp 변환
+                    if 'timestamp' in data:
+                        ts_val = float(data['timestamp'])
+                        data['timestamp'] = datetime.fromtimestamp(ts_val, tz=timezone.utc).isoformat()
                     
-                # [삭제됨] 값을 temp/humi 필드로 복사하던 코드 삭제함
-
-                data['processed_at'] = datetime.now(timezone.utc).isoformat()
-
-                opensearch_client.index(index=INDEX_NAME, body=data)
-                processed_count += 1
-                
-            except Exception as e:
-                print(f"Error indexing: {e}")
+                    # (B) 값 변환 (실수형)
+                    if 'value' in data:
+                        data['value'] = float(data['value'])
+                    
+                    data['processed_at'] = datetime.now(timezone.utc).isoformat()
+                    
+                    # Bulk 작업에 메타데이터 추가
+                    operations.append({"index": {"_index": INDEX_NAME}})
+                    operations.append(data)
+                    
+                except Exception as e:
+                    print(f"Error preparing record: {e}")
+            
+            # Bulk 요청 실행
+            if operations:
+                try:
+                    response = opensearch_client.bulk(body=operations)
+                    processed_count = len(records)
+                    if response.get('errors'):
+                        print(f"Bulk indexing had errors: {response}")
+                except Exception as e:
+                    print(f"Error in bulk indexing: {e}")
 
         print(f"Processed {processed_count} records to OpenSearch")
 

@@ -109,7 +109,7 @@ resource "aws_lambda_function" "cache_to_mongodb" {
   source_code_hash = data.archive_file.cache_to_mongodb.output_base64sha256
   runtime         = "python3.11"
   timeout         = 300
-  memory_size     = 512
+  memory_size     = 2048
 
   vpc_config {
     subnet_ids         = data.terraform_remote_state.vpc.outputs.private_subnets
@@ -148,7 +148,7 @@ resource "aws_lambda_function" "cache_to_opensearch" {
   source_code_hash = data.archive_file.cache_to_opensearch.output_base64sha256
   runtime         = "python3.11"
   timeout         = 300
-  memory_size     = 512
+  memory_size     = 2048
 
   vpc_config {
     subnet_ids         = data.terraform_remote_state.vpc.outputs.private_subnets
