@@ -17,7 +17,7 @@ variable "allowed_cidr_blocks" {
 
 variable "redis_node_type" {
   type    = string
-  default = "cache.t3.medium"
+  default = "cache.t3.small"
   description = "Redis 노드 타입"
 }
 

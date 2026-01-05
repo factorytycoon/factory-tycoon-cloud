@@ -13,7 +13,7 @@ variable "domain_name" {
 variable "instance_type" {
   description = "OpenSearch 인스턴스 타입"
   type        = string
-  default     = "t3.small.search"
+  default     = "t3.medium.search"
 }
 
 variable "instance_count" {
