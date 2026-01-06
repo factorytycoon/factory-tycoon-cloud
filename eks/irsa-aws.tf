@@ -56,14 +56,9 @@ resource "aws_iam_policy" "aws_opensearch_access" {
       {
         Effect = "Allow"
         Action = [
-          # "es:ESHttpGet",
-          # "es:ESHttpPost",
-          # "es:ESHttpPut",
-          # "es:ESHttpDelete",
-          # "es:ESHttpHead"
           "es:*"
         ]
-        Resource = "arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/opensearch/*"
+        Resource = "arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/factory-tycoon-search/*"
       }
     ]
   })
