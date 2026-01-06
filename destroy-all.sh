@@ -11,7 +11,21 @@ echo "Factory Tycoon Cloud destroy script"
 echo "=========================================="
 echo ""
 
-kubectl delete application factory-tycoon-ingress -n argocd
+echo "→ Delete ArgoCD Application (factory-tycoon-ingress)"
+kubectl delete application factory-tycoon-ingress -n argocd 2>/dev/null || true
+
+echo "→ Wait: Ingress controller to remove ALB (takes ~30-60 seconds)"
+set +e
+for i in {1..60}; do
+  ALB_COUNT=$(aws ec2 describe-load-balancers --region ap-northeast-2 --query "LoadBalancers[?Tags[?Key=='elbv2.k8s.aws/cluster']].LoadBalancerArn | length(@)" 2>/dev/null || echo "0")
+  if [ "$ALB_COUNT" -eq "0" ]; then
+    echo "✓ ALB successfully removed"
+    break
+  fi
+  echo "  Waiting... ALB still exists ($ALB_COUNT found), waiting..."
+  sleep 2
+done
+set -e
 
 for module in "${MODULES[@]}"; do
   echo "========== [$module] 제거 중... =========="
