@@ -11,6 +11,7 @@ resource "kubernetes_secret_v1" "sf_backend_aws_secrets" {
     # AWS_ACCESS_KEY = var.aws_aws_access_key_id
     # AWS_SECRET_KEY = var.aws_aws_secret_access_key
     AWS_BUCKET = var.aws_s3_bucket
+    OPENSEARCH_ENDPOINT = data.terraform_remote_state.opensearch.outputs.endpoint
   }
 }
 

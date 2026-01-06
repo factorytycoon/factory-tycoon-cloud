@@ -19,3 +19,12 @@ data "terraform_remote_state" "elasticache" {
     region = "ap-northeast-2"
   }
 }
+
+data "terraform_remote_state" "opensearch" {
+  backend = "s3"
+  config = {
+    bucket = "factory-tycoon-terraform-state" 
+    key    = "opensearch/terraform.tfstate"
+    region = "ap-northeast-2"
+  }
+}
