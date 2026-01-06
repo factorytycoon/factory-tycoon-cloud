@@ -43,8 +43,8 @@ def lambda_handler(event, context):
                             'type': {'type': 'keyword'},
                             'value': {'type': 'float'},     # 오직 이 값만 사용
                             'unit': {'type': 'keyword'},
-                            'timestamp': {'type': 'date'},
-                            'processed_at': {'type': 'date'}
+                            'timestamp': {'type': 'date', 'format': 'strict_date_time'},
+                            'processed_at': {'type': 'date', 'format': 'strict_date_time'}
                         }
                     }
                 },
