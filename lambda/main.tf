@@ -86,6 +86,8 @@ resource "aws_lambda_function" "iot_to_cache" {
     variables = {
       REDIS_ENDPOINT       = data.terraform_remote_state.elasticache.outputs.redis_primary_endpoint
       REDIS_PORT           = data.terraform_remote_state.elasticache.outputs.redis_port
+      REDIS_ENDPOINT_LOCAL       = var.redis_endpoint_local
+      REDIS_PORT_LOCAL           = var.redis_port_local
     }
   }
 

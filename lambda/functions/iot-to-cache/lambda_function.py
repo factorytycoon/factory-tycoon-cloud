@@ -10,6 +10,11 @@ redis_client = redis.Redis(
     port=int(os.environ['REDIS_PORT']),
     decode_responses=True
 )
+# redis_client_local = redis.Redis(
+#     host=os.environ['REDIS_ENDPOINT_LOCAL'],
+#     port=int(os.environ['REDIS_PORT_LOCAL']),
+#     decode_responses=True
+# )
 
  
 
@@ -66,17 +71,19 @@ def lambda_handler(event, context):
         }
         
         redis_client.hset(redis_key_latest, mapping=mapping_data)
+        # redis_client_local.hset(redis_key_latest, mapping=mapping_data)
         
         # (B) 시계열 데이터 저장 (Sorted Set) -> '그래프' 조회용
         # 키 예시: device:ft-pi-001:timeseries
         # 데이터 전체(JSON)를 저장하여 나중에 필터링 가능하게 함
         redis_key_series = f"device:{device_id}:timeseries"
         redis_client.zadd(redis_key_series, {json.dumps(data): timestamp})
+        # redis_client_local.zadd(redis_key_series, {json.dumps(data): timestamp})
         
         # 4. 처리 대기 큐에 추가 (MongoDB, OpenSearch 저장용)
         message_body = json.dumps(data)
         
-        # Redis Stream (권장)
+        # Redis Stream (MongoDB, OpenSearch 저장용 - 유지)
         redis_client.xadd(
             'pending:mongodb_stream',
             {'data': message_body},
@@ -89,7 +96,10 @@ def lambda_handler(event, context):
             maxlen=10000,
             approximate=True
         )
-        # SQS 제거: Redis Stream만 사용
+        
+        # Redis Pub/Sub (실시간 WebSocket 브로드캐스트용 - 추가)
+        redis_client.publish('sensor_data', message_body)
+        # redis_client_local.publish('sensor_data', message_body)
         
         print(f"Successfully stored data for {device_id} ({data_type})")
         
