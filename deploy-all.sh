@@ -103,6 +103,33 @@ cd ..
 echo "[argocd] bootstrap 완료"
 echo ""
 
+# ============================
+# Wait for Ingress ALB (for CloudFront origin)
+# ============================
+INGRESS_NAMESPACE="${INGRESS_NAMESPACE:-default}"
+INGRESS_NAME="${INGRESS_NAME:-factory-ingress}"
+ALB_WAIT_MAX_TRIES="${ALB_WAIT_MAX_TRIES:-60}"
+ALB_WAIT_SLEEP_SEC="${ALB_WAIT_SLEEP_SEC:-10}"
+
+echo "========== [cloudfront] wait for ingress ALB =========="
+ALB_DNS_NAME=""
+set +e
+for i in $(seq 1 "$ALB_WAIT_MAX_TRIES"); do
+  ALB_DNS_NAME="$(kubectl get ingress -n "$INGRESS_NAMESPACE" "$INGRESS_NAME" -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null)"
+  if [ -n "$ALB_DNS_NAME" ]; then
+    break
+  fi
+  sleep "$ALB_WAIT_SLEEP_SEC"
+done
+set -e
+
+if [ -n "$ALB_DNS_NAME" ]; then
+  echo "Ingress ALB ready: $ALB_DNS_NAME"
+else
+  echo "Ingress ALB not ready after wait; continuing without explicit alb_dns_name."
+fi
+echo ""
+
 REMAINING_MODULES=("cloudfront")
 
 for module in "${REMAINING_MODULES[@]}"; do
@@ -111,8 +138,13 @@ for module in "${REMAINING_MODULES[@]}"; do
   cd "$module"
   
   terraform init -reconfigure
-  terraform plan -out=tfplan
-  terraform apply -auto-approve tfplan
+  if [ -n "$ALB_DNS_NAME" ]; then
+    terraform plan -out=tfplan -var="alb_dns_name=$ALB_DNS_NAME"
+    terraform apply -auto-approve tfplan
+  else
+    terraform plan -out=tfplan
+    terraform apply -auto-approve tfplan
+  fi
 
   rm -f tfplan
   cd ..
