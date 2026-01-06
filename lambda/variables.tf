@@ -33,6 +33,28 @@ variable "mongodb_database" {
   default     = "factory-tycoon"
 }
 
+variable "mariadb_host" {
+  description = "host for MariaDB"
+  type        = string
+}
+
+variable "mariadb_port" {
+  description = "port for MariaDB"
+  default     = 3306
+  type        = number
+}
+
+variable "mariadb_username" {
+  description = "Username for MariaDB"
+  type        = string
+}
+
+variable "mariadb_password" {
+  description = "Password for MariaDB"
+  type        = string
+  sensitive   = true
+}
+
 # variable "opensearch_endpoint" {
 #   description = "OpenSearch endpoint URL"
 #   type        = string

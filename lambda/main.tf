@@ -175,6 +175,47 @@ resource "aws_lambda_function" "cache_to_opensearch" {
   }
 }
 
+# Lambda 4: OpenSearch -> MariaDB
+data "archive_file" "opensearch_to_mariadb" {
+  type        = "zip"
+  source_dir  = "${path.module}/functions/opensearch-to-mariadb"
+  output_path = "${path.module}/builds/opensearch-to-mariadb.zip"
+}
+
+resource "aws_lambda_function" "opensearch_to_mariadb" {
+  filename         = data.archive_file.opensearch_to_mariadb.output_path
+  function_name    = "${var.project}-opensearch-to-mariadb"
+  role             = aws_iam_role.lambda_role.arn
+  handler          = "lambda_function.lambda_handler"
+  source_code_hash = data.archive_file.opensearch_to_mariadb.output_base64sha256
+  runtime          = "python3.11"
+  timeout          = 300
+  memory_size      = 2048
+
+  vpc_config {
+    subnet_ids         = data.terraform_remote_state.vpc.outputs.private_subnets
+    security_group_ids = [
+      data.terraform_remote_state.security_groups.outputs.common_sg_id,
+      data.terraform_remote_state.security_groups.outputs.data_sg_id
+    ]
+  }
+
+  environment {
+    variables = {
+      OPENSEARCH_ENDPOINT        = data.terraform_remote_state.opensearch.outputs.endpoint
+      OPENSEARCH_MASTER_USER     = data.terraform_remote_state.opensearch.outputs.master_user_name
+      OPENSEARCH_MASTER_PASSWORD = data.terraform_remote_state.opensearch.outputs.master_user_password
+      MARIADB_URL                = var.mariadb_host
+      MARIADB_USERNAME           = var.mariadb_username
+      MARIADB_PASSWORD           = var.mariadb_password
+    }
+  }
+
+  tags = {
+    Name = "${var.project}-opensearch-to-mariadb"
+  }
+}
+
 # IoT Rule for Lambda 1
 resource "aws_iot_topic_rule" "iot_to_lambda" {
   name        = "${replace(var.project, "-", "_")}_iot_to_lambda"
@@ -213,6 +254,11 @@ resource "aws_cloudwatch_event_target" "cache_to_opensearch_target" {
   arn  = aws_lambda_function.cache_to_opensearch.arn
 }
 
+resource "aws_cloudwatch_event_target" "opensearch_to_mariadb_target" {
+  rule = aws_cloudwatch_event_rule.every_1_minute.name
+  arn  = aws_lambda_function.opensearch_to_mariadb.arn
+}
+
 resource "aws_lambda_permission" "allow_eventbridge_cache_mongodb" {
   statement_id  = "AllowExecutionFromEventBridgeMongo"
   action        = "lambda:InvokeFunction"
@@ -225,6 +271,14 @@ resource "aws_lambda_permission" "allow_eventbridge_cache_opensearch" {
   statement_id  = "AllowExecutionFromEventBridgeOS"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.cache_to_opensearch.function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.every_1_minute.arn
+}
+
+resource "aws_lambda_permission" "allow_eventbridge_opensearch_mariadb" {
+  statement_id  = "AllowExecutionFromEventBridgeOSMaria"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.opensearch_to_mariadb.function_name
   principal     = "events.amazonaws.com"
   source_arn    = aws_cloudwatch_event_rule.every_1_minute.arn
 }
