@@ -9,7 +9,10 @@ resource "aws_iam_role" "lambda_role" {
         Action = "sts:AssumeRole"
         Effect = "Allow"
         Principal = {
-          Service = "lambda.amazonaws.com"
+          Service = [
+            "lambda.amazonaws.com",
+            "es.amazonaws.com"
+          ]
         }
       }
     ]
@@ -255,10 +258,10 @@ resource "aws_cloudwatch_event_target" "cache_to_opensearch_target" {
   arn  = aws_lambda_function.cache_to_opensearch.arn
 }
 
-resource "aws_cloudwatch_event_target" "opensearch_to_mariadb_target" {
-  rule = aws_cloudwatch_event_rule.every_1_minute.name
-  arn  = aws_lambda_function.opensearch_to_mariadb.arn
-}
+# resource "aws_cloudwatch_event_target" "opensearch_to_mariadb_target" {
+#   rule = aws_cloudwatch_event_rule.every_1_minute.name
+#   arn  = aws_lambda_function.opensearch_to_mariadb.arn
+# }
 
 resource "aws_lambda_permission" "allow_eventbridge_cache_mongodb" {
   statement_id  = "AllowExecutionFromEventBridgeMongo"
@@ -276,12 +279,10 @@ resource "aws_lambda_permission" "allow_eventbridge_cache_opensearch" {
   source_arn    = aws_cloudwatch_event_rule.every_1_minute.arn
 }
 
-resource "aws_lambda_permission" "allow_eventbridge_opensearch_mariadb" {
-  statement_id  = "AllowExecutionFromEventBridgeOSMaria"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.opensearch_to_mariadb.function_name
-  principal     = "events.amazonaws.com"
-  source_arn    = aws_cloudwatch_event_rule.every_1_minute.arn
-}
-
-# EventBridge Rule for Lambda 2 (매 5분마다 실행)
+# resource "aws_lambda_permission" "allow_eventbridge_opensearch_mariadb" {
+#   statement_id  = "AllowExecutionFromEventBridgeOSMaria"
+#   action        = "lambda:InvokeFunction"
+#   function_name = aws_lambda_function.opensearch_to_mariadb.function_name
+#   principal     = "events.amazonaws.com"
+#   source_arn    = aws_cloudwatch_event_rule.every_1_minute.arn
+# }
