@@ -48,7 +48,8 @@ resource "aws_iam_role_policy" "lambda_custom_policy" {
           "es:ESHttpPut",
           "es:ESHttpPost",
           "es:ESHttpHead",
-          "es:ESHttpDelete"
+          "es:ESHttpDelete",
+          "sns:*"
         ]
         Resource = "*"
       }
