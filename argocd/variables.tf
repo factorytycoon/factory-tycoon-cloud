@@ -88,18 +88,15 @@ variable "aws_server_port" {
   default = "8081"
 }
 
-# ---------- Redis Stream Configs ----------
-variable "redis_stream_key" {
-  description = "Redis stream key for backend consumer"
+# ---------- Redis Configs ----------
+variable "redis_channel" {
+  description = "Redis pubsub channel for sensor data"
   type        = string
+  default     = "sensor_data"
 }
 
-variable "consumer_group" {
-  description = "Redis consumer group name"
+variable "websocket_path" {
+  description = "WebSocket endpoint path"
   type        = string
-}
-
-variable "consumer_name" {
-  description = "Redis consumer name"
-  type        = string
+  default     = "/ws"
 }

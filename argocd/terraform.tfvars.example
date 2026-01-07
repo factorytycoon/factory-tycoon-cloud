@@ -18,6 +18,5 @@ mariadb_username = "username"
 mariadb_password = "password"
 jwt_secret_key   = "your-secret-key-change-this-in-production-min-256-bits
 
-redis_stream_key = "redis_stream_key"
-consumer_group   = "consumer_group"
-consumer_name    = "consumer_name"
+redis_channel  = "sensor_data"
+websocket_path = "/ws"

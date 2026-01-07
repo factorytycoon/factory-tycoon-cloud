@@ -43,9 +43,8 @@ resource "kubernetes_secret_v1" "sf_backend_websocket_secrets" {
   type = "Opaque"
 
   data = {
-    REDIS_HOST       = data.terraform_remote_state.elasticache.outputs.redis_primary_endpoint
-    REDIS_STREAM_KEY = var.redis_stream_key
-    CONSUMER_GROUP   = var.consumer_group
-    CONSUMER_NAME    = var.consumer_name
+    REDIS_HOST     = data.terraform_remote_state.elasticache.outputs.redis_primary_endpoint
+    REDIS_CHANNEL  = var.redis_channel
+    WEBSOCKET_PATH = var.websocket_path
   }
 }
