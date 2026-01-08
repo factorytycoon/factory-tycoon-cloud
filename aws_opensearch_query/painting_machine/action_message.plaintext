@@ -1,0 +1,27 @@
+{
+  "monitor_name": "{{ctx.monitor.name}}",
+  "trigger_name": "{{ctx.trigger.name}}",
+  "severity": "{{ctx.trigger.severity}}",
+  "hits": [
+    {{#ctx.results.0.hits.hits}}
+    {
+      "device_id": "{{_source.device_id}}",
+      "sensor_time": "{{_source.timestamp}}",
+      "full_data": {
+         "device_id": "{{_source.device_id}}",
+         "timestamp": "{{_source.timestamp}}",
+         "sensors": [
+            {{#_source.sensors}}
+            {
+               "type": "{{type}}",
+               "value": {{value}}
+            }
+            {{^last}},{{/last}}
+            {{/_source.sensors}}
+         ]
+      }
+    }
+    {{^last}},{{/last}}
+    {{/ctx.results.0.hits.hits}}
+  ]
+}

@@ -186,6 +186,8 @@ data "archive_file" "opensearch_to_mariadb" {
   output_path = "${path.module}/builds/opensearch-to-mariadb.zip"
 }
 
+ 
+
 resource "aws_lambda_function" "opensearch_to_mariadb" {
   filename         = data.archive_file.opensearch_to_mariadb.output_path
   function_name    = "${var.project}-opensearch-to-mariadb"
@@ -281,3 +283,11 @@ resource "aws_lambda_permission" "allow_eventbridge_cache_opensearch" {
 #   principal     = "events.amazonaws.com"
 #   source_arn    = aws_cloudwatch_event_rule.every_1_minute.arn
 # }
+# Lambda Permission for SNS
+resource "aws_lambda_permission" "allow_sns_opensearch_mariadb" {
+  statement_id  = "AllowExecutionFromSNS"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.opensearch_to_mariadb.function_name
+  principal     = "sns.amazonaws.com"
+  source_arn    = data.terraform_remote_state.sns.outputs.topic_arn
+}
