@@ -206,12 +206,7 @@ resource "aws_lambda_function" "opensearch_to_mariadb" {
 
   environment {
     variables = {
-      OPENSEARCH_ENDPOINT        = data.terraform_remote_state.opensearch.outputs.endpoint
-      OPENSEARCH_MASTER_USER     = data.terraform_remote_state.opensearch.outputs.master_user_name
-      OPENSEARCH_MASTER_PASSWORD = data.terraform_remote_state.opensearch.outputs.master_user_password
-      MARIADB_URL                = var.mariadb_host
-      MARIADB_USERNAME           = var.mariadb_username
-      MARIADB_PASSWORD           = var.mariadb_password
+      BACKEND_API_URL = var.backend_api_url
     }
   }
 
