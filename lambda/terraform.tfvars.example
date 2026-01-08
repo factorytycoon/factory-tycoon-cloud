@@ -1,6 +1,6 @@
 mongodb_uri         = "mongodb://username:password@host:27017"
 mongodb_database    = "factory-tycoon"
 
-mariadb_url         = "IP"
+mariadb_host        = "IP"
 mariadb_username    = "username"
 mariadb_password    = "password"
