@@ -206,6 +206,10 @@ resource "aws_lambda_function" "opensearch_to_mariadb" {
 
   environment {
     variables = {
+      REDIS_ENDPOINT       = data.terraform_remote_state.elasticache.outputs.redis_primary_endpoint
+      REDIS_PORT           = data.terraform_remote_state.elasticache.outputs.redis_port
+      REDIS_ENDPOINT_LOCAL       = var.redis_endpoint_local
+      REDIS_PORT_LOCAL           = var.redis_port_local
       BACKEND_API_URL = var.backend_api_url
     }
   }

@@ -4,13 +4,26 @@ import os
 import logging
 from datetime import datetime
 import re
+import redis
 
 
 # 로깅 설정
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-BACKEND_API_URL = os.environ['BACKEND_API_URL'] 
+BACKEND_API_URL = os.environ['BACKEND_API_URL']
+
+# Redis 연결
+redis_client = redis.Redis(
+    host=os.environ['REDIS_ENDPOINT'],
+    port=int(os.environ['REDIS_PORT']),
+    decode_responses=True
+)
+redis_client_local = redis.Redis(
+    host=os.environ['REDIS_ENDPOINT_LOCAL'],
+    port=int(os.environ['REDIS_PORT_LOCAL']),
+    decode_responses=True
+) 
 
 def lambda_handler(event, context):
     """
@@ -51,9 +64,15 @@ def lambda_handler(event, context):
         )
 
         if response.status_code == 200:
+            # 5. Redis Pub/Sub로 알람 데이터 전송 (WebSocket 브로드캐스트용)
+            alert_message = json.dumps(alert_data)
+            redis_client.publish('alert_notifications', alert_message)
+            redis_client_local.publish('alert_notifications', alert_message)
+            logger.info("Alert data published to Redis Pub/Sub")
+            
             return {
                 "statusCode": 200,
-                "body": json.dumps("Successfully forwarded to Backend")
+                "body": json.dumps("Successfully forwarded to Backend and WebSocket")
             }
         else:
             raise Exception(f"Backend API Error: {response.status_code}")
