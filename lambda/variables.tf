@@ -69,5 +69,5 @@ variable "iot_topic" {
 variable "backend_api_url" {
   description = "Backend API URL"
   type        = string
-  default     = "https://factorytycoon.net/api/v1/ft/alarm/os"
+  default     = "https://factorytycoon.net/aws/v1/ft/ai/alarm"
 }
