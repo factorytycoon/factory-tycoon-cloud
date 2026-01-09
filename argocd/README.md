@@ -1,9 +1,7 @@
 
 ## 1. argocd password check 
 ``` bash
-k get secret argocd-initial-admin-secret \
--n argocd \
--o jsonpath="{.data.password}" | base64 —decode
+k get secret argocd-initial-admin-secret -n argocd -o jsonpath="{.data.password}" | base64 --decode
 ```
 
 ## 2. port forwarding
