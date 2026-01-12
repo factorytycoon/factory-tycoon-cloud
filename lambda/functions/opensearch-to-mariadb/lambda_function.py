@@ -19,11 +19,11 @@ redis_client = redis.Redis(
     port=int(os.environ['REDIS_PORT']),
     decode_responses=True
 )
-redis_client_local = redis.Redis(
-    host=os.environ['REDIS_ENDPOINT_LOCAL'],
-    port=int(os.environ['REDIS_PORT_LOCAL']),
-    decode_responses=True
-) 
+# redis_client_local = redis.Redis(
+#     host=os.environ['REDIS_ENDPOINT_LOCAL'],
+#     port=int(os.environ['REDIS_PORT_LOCAL']),
+#     decode_responses=True
+# ) 
 
 def lambda_handler(event, context):
     """
@@ -64,11 +64,16 @@ def lambda_handler(event, context):
         )
 
         if response.status_code == 200:
-            # 5. Redis Pub/Sub로 알람 데이터 전송 (WebSocket 브로드캐스트용)
-            alert_message = json.dumps(alert_data)
-            redis_client.publish('alert_notifications', alert_message)
-            redis_client_local.publish('alert_notifications', alert_message)
-            logger.info("Alert data published to Redis Pub/Sub")
+            # 백엔드(Bedrock) 응답을 Redis Pub/Sub로 전달
+            try:
+                backend_payload = response.json()
+            except Exception:
+                backend_payload = {"raw": response.text}
+
+            redis_message = json.dumps(backend_payload)
+            redis_client.publish('alert_notifications', redis_message)
+            # redis_client_local.publish('alert_notifications', redis_message)
+            logger.info("Backend alarm response published to Redis Pub/Sub")
             
             return {
                 "statusCode": 200,

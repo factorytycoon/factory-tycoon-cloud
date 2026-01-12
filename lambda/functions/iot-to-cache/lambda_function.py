@@ -10,11 +10,11 @@ redis_client = redis.Redis(
     port=int(os.environ['REDIS_PORT']),
     decode_responses=True
 )
-redis_client_local = redis.Redis(
-    host=os.environ['REDIS_ENDPOINT_LOCAL'],
-    port=int(os.environ['REDIS_PORT_LOCAL']),
-    decode_responses=True
-)
+# redis_client_local = redis.Redis(
+#     host=os.environ['REDIS_ENDPOINT_LOCAL'],
+#     port=int(os.environ['REDIS_PORT_LOCAL']),
+#     decode_responses=True
+# )
 
  
 
@@ -99,7 +99,7 @@ def lambda_handler(event, context):
         
         # Redis Pub/Sub (실시간 WebSocket 브로드캐스트용 - 추가)
         redis_client.publish('sensor_data', message_body)
-        redis_client_local.publish('sensor_data', message_body)
+        # redis_client_local.publish('sensor_data', message_body)
         
         print(f"Successfully stored data for {device_id} ({data_type})")
         
