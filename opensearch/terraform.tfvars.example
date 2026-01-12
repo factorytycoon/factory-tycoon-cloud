@@ -1,0 +1,117 @@
+# OpenSearch Monitoring Configuration - Terraform Variables
+# 이 파일을 terraform.tfvars로 복사하여 사용하세요
+
+region      = "ap-northeast-2"
+domain_name = "factory-tycoon-search"
+instance_type = "t3.medium.search"
+instance_count = 1
+ebs_volume_size = 10
+
+# OpenSearch Master User (Terraform 적용 시 변경 필요)
+master_user_name = "user"
+master_user_password = "12345678Qq!"  # 실제 배포시 강력한 패스워드로 변경
+
+# ============================================================================
+# Inspection (검수) Process Sensor Configuration
+# ============================================================================
+
+inspection_config = {
+  # Weight (무게) - 범위: 300~2000g
+  weight_red_low     = 400        # Red 하한: 400g 미만
+  weight_red_high    = 1700       # Red 상한: 1700g 초과
+  weight_yellow_low  = 400        # Yellow 범위: 400~1700g
+  weight_yellow_high = 1700
+
+  # Torque (토크) - 범위: 0~60
+  torque_red_low     = 5          # Red 하한: 5 미만
+  torque_red_high    = 55         # Red 상한: 55 초과
+  torque_orange_low  = 46         # Orange: 46~55
+  torque_orange_high = 55
+  torque_yellow_low  = 30         # Yellow: 30~45
+  torque_yellow_high = 45
+}
+
+# ============================================================================
+# Painting (도색) Process Sensor Configuration
+# ============================================================================
+
+painting_config = {
+  # VOC (유해가스) - ppm
+  voc_red         = 500           # Red: >500ppm
+  voc_orange_low  = 150           # Orange: 150~499ppm
+  voc_orange_high = 499
+  voc_yellow_low  = 50            # Yellow: 50~149ppm
+  voc_yellow_high = 149
+
+  # Pressure (분사압력) - bar
+  pressure_red_low     = 1.0      # Red: <1.0 or >7.0
+  pressure_red_high    = 7.0
+  pressure_orange_low  = 3.5      # Orange: <3.5 or >4.8 (Red 제외)
+  pressure_orange_high = 4.8
+  pressure_yellow_low  = 3.5      # Yellow: 3.5~3.7 or 4.3~4.8
+  pressure_yellow_high = 4.8
+
+  # Temperature (온도) - °C
+  temp_red            = 80        # Red: >80°C
+  temp_orange_low     = 38        # Orange: <38 or >55 (Red 제외)
+  temp_orange_high    = 55
+  temp_yellow_low     = 38        # Yellow: 38~41 or 49~55
+  temp_yellow_high    = 55
+}
+
+# ============================================================================
+# Turning (선삭) Process Sensor Configuration
+# ============================================================================
+
+turning_config = {
+  # RPM (회전수) - rpm
+  rpm_red_low      = 500          # Red: <500rpm
+  rpm_orange_low   = 2400         # Orange: 2400~2699 or >3300
+  rpm_orange_high  = 2699
+  rpm_yellow_low   = 2700         # Yellow: 2700~2899
+  rpm_yellow_high  = 2899
+  rpm_orange_high2 = 3300         # Orange: >3300rpm
+
+  # Noise (소음) - dB
+  noise_red           = 115       # Red: >115dB
+  noise_orange_low    = 106       # Orange: 106~114dB
+  noise_orange_high   = 114
+  noise_yellow_low    = 99        # Yellow: 99~105dB
+  noise_yellow_high   = 105
+
+  # Displacement (변위) - mm
+  displacement_red         = 1.00 # Red: >1.00mm
+  displacement_orange_low  = 0.51 # Orange: 0.51~1.00mm
+  displacement_orange_high = 1.00
+  displacement_yellow_low  = 0.21 # Yellow: 0.21~0.50mm
+  displacement_yellow_high = 0.50
+}
+
+# ============================================================================
+# Alert Severity Thresholds (by total score)
+# ============================================================================
+
+alert_thresholds = {
+  yellow_min = 6      # Yellow 알람 최소 점수
+  yellow_max = 6      # Yellow 알람 최대 점수
+  orange_min = 7      # Orange 알람 최소 점수
+  orange_max = 9      # Orange 알람 최대 점수
+  red_min    = 10     # Red 알람 최소 점수
+}
+
+# ============================================================================
+# SNS & Lambda Integration
+# ============================================================================
+
+# SNS Topic ARN (비어있으면 terraform_remote_state에서 자동 조회)
+# sns_topic_arn = "arn:aws:sns:ap-northeast-2:123456789012:factory-tycoon-alerts"
+
+# Lambda Function ARN (비어있으면 terraform_remote_state에서 자동 조회)
+# lambda_function_arn = "arn:aws:lambda:ap-northeast-2:123456789012:function:opensearch-to-mariadb"
+
+tags = {
+  Project     = "factory-tycoon"
+  Environment = "production"
+  ManagedBy   = "terraform"
+  Component   = "opensearch-monitoring"
+}
