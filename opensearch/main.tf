@@ -75,3 +75,42 @@ resource "aws_opensearch_domain" "main" {
     }
   )
 }
+
+# OpenSearch IAM Role for SNS
+resource "aws_iam_role" "opensearch_sns_role" {
+  name = "${var.domain_name}-sns-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "es.amazonaws.com"
+        }
+      }
+    ]
+  })
+
+  tags = var.tags
+}
+
+# IAM Policy for OpenSearch to publish to SNS
+resource "aws_iam_role_policy" "opensearch_sns_policy" {
+  name = "${var.domain_name}-sns-policy"
+  role = aws_iam_role.opensearch_sns_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "sns:Publish"
+        ]
+        Resource = data.terraform_remote_state.sns.outputs.sns_topic_arn
+      }
+    ]
+  })
+}

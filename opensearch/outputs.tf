@@ -38,3 +38,8 @@ output "master_user_password" {
   value       = var.master_user_password
   sensitive   = true
 }
+
+output "sns_role_arn" {
+  description = "OpenSearch SNS IAM Role ARN"
+  value       = aws_iam_role.opensearch_sns_role.arn
+}

@@ -241,6 +241,22 @@ resource "aws_lambda_permission" "iot_invoke" {
   source_arn    = aws_iot_topic_rule.iot_to_lambda.arn
 }
 
+# Lambda Permission for SNS to invoke opensearch-to-mariadb
+resource "aws_lambda_permission" "sns_invoke_opensearch_to_mariadb" {
+  statement_id  = "AllowExecutionFromSNS"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.opensearch_to_mariadb.function_name
+  principal     = "sns.amazonaws.com"
+  source_arn    = data.terraform_remote_state.sns.outputs.sns_topic_arn
+}
+
+# SNS Topic Subscription for opensearch-to-mariadb Lambda
+resource "aws_sns_topic_subscription" "opensearch_to_mariadb_subscription" {
+  topic_arn = data.terraform_remote_state.sns.outputs.sns_topic_arn
+  protocol  = "lambda"
+  endpoint  = aws_lambda_function.opensearch_to_mariadb.arn
+}
+
 # EventBridge Rule: schedule to trigger cache processors
 resource "aws_cloudwatch_event_rule" "every_1_minute" {
   name                = "${var.project}-every-1m"

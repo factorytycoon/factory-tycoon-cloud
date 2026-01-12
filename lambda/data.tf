@@ -37,3 +37,13 @@ data "terraform_remote_state" "opensearch" {
     region = "ap-northeast-2"
   }
 }
+
+data "terraform_remote_state" "sns" {
+  backend = "s3"
+
+  config = {
+    bucket = "factory-tycoon-terraform-state"
+    key    = "sns/terraform.tfstate"
+    region = "ap-northeast-2"
+  }
+}
