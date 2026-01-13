@@ -65,3 +65,9 @@ variable "iot_topic" {
   type        = string
   default     = "sensor/data/#"
 }
+
+variable "backend_api_url" {
+  description = "Backend API URL"
+  type        = string
+  default     = "https://factorytycoon.net/aws/v1/ft/ai/alarm"
+}

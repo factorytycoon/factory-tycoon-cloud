@@ -9,7 +9,10 @@ resource "aws_iam_role" "lambda_role" {
         Action = "sts:AssumeRole"
         Effect = "Allow"
         Principal = {
-          Service = "lambda.amazonaws.com"
+          Service = [
+            "lambda.amazonaws.com",
+            "es.amazonaws.com"
+          ]
         }
       }
     ]
@@ -203,12 +206,11 @@ resource "aws_lambda_function" "opensearch_to_mariadb" {
 
   environment {
     variables = {
-      OPENSEARCH_ENDPOINT        = data.terraform_remote_state.opensearch.outputs.endpoint
-      OPENSEARCH_MASTER_USER     = data.terraform_remote_state.opensearch.outputs.master_user_name
-      OPENSEARCH_MASTER_PASSWORD = data.terraform_remote_state.opensearch.outputs.master_user_password
-      MARIADB_URL                = var.mariadb_host
-      MARIADB_USERNAME           = var.mariadb_username
-      MARIADB_PASSWORD           = var.mariadb_password
+      REDIS_ENDPOINT       = data.terraform_remote_state.elasticache.outputs.redis_primary_endpoint
+      REDIS_PORT           = data.terraform_remote_state.elasticache.outputs.redis_port
+      REDIS_ENDPOINT_LOCAL       = var.redis_endpoint_local
+      REDIS_PORT_LOCAL           = var.redis_port_local
+      BACKEND_API_URL = var.backend_api_url
     }
   }
 
@@ -255,10 +257,10 @@ resource "aws_cloudwatch_event_target" "cache_to_opensearch_target" {
   arn  = aws_lambda_function.cache_to_opensearch.arn
 }
 
-resource "aws_cloudwatch_event_target" "opensearch_to_mariadb_target" {
-  rule = aws_cloudwatch_event_rule.every_1_minute.name
-  arn  = aws_lambda_function.opensearch_to_mariadb.arn
-}
+# resource "aws_cloudwatch_event_target" "opensearch_to_mariadb_target" {
+#   rule = aws_cloudwatch_event_rule.every_1_minute.name
+#   arn  = aws_lambda_function.opensearch_to_mariadb.arn
+# }
 
 resource "aws_lambda_permission" "allow_eventbridge_cache_mongodb" {
   statement_id  = "AllowExecutionFromEventBridgeMongo"
@@ -276,12 +278,10 @@ resource "aws_lambda_permission" "allow_eventbridge_cache_opensearch" {
   source_arn    = aws_cloudwatch_event_rule.every_1_minute.arn
 }
 
-resource "aws_lambda_permission" "allow_eventbridge_opensearch_mariadb" {
-  statement_id  = "AllowExecutionFromEventBridgeOSMaria"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.opensearch_to_mariadb.function_name
-  principal     = "events.amazonaws.com"
-  source_arn    = aws_cloudwatch_event_rule.every_1_minute.arn
-}
-
-# EventBridge Rule for Lambda 2 (매 5분마다 실행)
+# resource "aws_lambda_permission" "allow_eventbridge_opensearch_mariadb" {
+#   statement_id  = "AllowExecutionFromEventBridgeOSMaria"
+#   action        = "lambda:InvokeFunction"
+#   function_name = aws_lambda_function.opensearch_to_mariadb.function_name
+#   principal     = "events.amazonaws.com"
+#   source_arn    = aws_cloudwatch_event_rule.every_1_minute.arn
+# }

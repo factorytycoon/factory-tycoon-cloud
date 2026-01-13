@@ -11,7 +11,37 @@ echo "Factory Tycoon Cloud destroy script"
 echo "=========================================="
 echo ""
 
-echo "→ Delete ArgoCD Application (factory-tycoon-ingress)"
+# VPC 리소스 사전 정리 (IGW 분리 전 필수)
+echo "→ VPC 리소스 정리 중..."
+set +e
+
+# Elastic IP 해제
+VPC_ID=$(aws ec2 describe-vpcs --filters "Name=tag:Name,Values=sf-vpc" --query 'Vpcs[0].VpcId' --output text --region ap-northeast-2 2>/dev/null)
+if [ "$VPC_ID" != "None" ] && [ -n "$VPC_ID" ]; then
+  echo "  - VPC ID: $VPC_ID"
+  
+  # Elastic IP 해제
+  ALLOCATION_IDS=$(aws ec2 describe-addresses --filters "Name=vpc-id,Values=$VPC_ID" --query 'Addresses[*].AllocationId' --output text --region ap-northeast-2 2>/dev/null)
+  if [ -n "$ALLOCATION_IDS" ] && [ "$ALLOCATION_IDS" != "" ]; then
+    for ALLOC_ID in $ALLOCATION_IDS; do
+      echo "  - Releasing Elastic IP: $ALLOC_ID"
+      aws ec2 release-address --allocation-id "$ALLOC_ID" --region ap-northeast-2 2>/dev/null || true
+    done
+  fi
+  
+  # ENI 정리 (NAT Gateway 등에서 사용)
+  ENI_IDS=$(aws ec2 describe-network-interfaces --filters "Name=vpc-id,Values=$VPC_ID" --query 'NetworkInterfaces[?Status==`available`].NetworkInterfaceId' --output text --region ap-northeast-2 2>/dev/null)
+  if [ -n "$ENI_IDS" ] && [ "$ENI_IDS" != "" ]; then
+    for ENI_ID in $ENI_IDS; do
+      echo "  - Deleting ENI: $ENI_ID"
+      aws ec2 delete-network-interface --network-interface-id "$ENI_ID" --region ap-northeast-2 2>/dev/null || true
+    done
+  fi
+fi
+
+set -e
+
+echo ""
 kubectl delete application factory-tycoon-ingress -n argocd 2>/dev/null || true
 
 echo "→ Wait: Ingress controller to remove ALB (takes ~30-60 seconds)"
