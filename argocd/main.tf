@@ -10,6 +10,23 @@ resource "helm_release" "argocd" {
   chart      = "argo-cd"
   version    = "7.8.2"
   namespace  = kubernetes_namespace_v1.argocd.metadata[0].name
+
+  values = [
+    yamlencode({
+      configs = {
+        cm = {
+          "resource.exclusions" = <<-EOT
+            - apiGroups:
+              - "metrics.eks.amazonaws.com"
+              kinds:
+              - "*"
+              clusters:
+              - "*"
+          EOT
+        }
+      }
+    })
+  ]
 }
 
 resource "kubernetes_secret_v1" "argocd_repo" {

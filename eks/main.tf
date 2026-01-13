@@ -5,7 +5,7 @@ module "eks" {
   version = "~> 20.0"
 
   cluster_name    = var.cluster_name
-  cluster_version = "1.34"
+  cluster_version = "1.32"
 
   vpc_id     = data.terraform_remote_state.vpc.outputs.vpc_id
   subnet_ids = data.terraform_remote_state.vpc.outputs.private_subnets
@@ -21,9 +21,15 @@ module "eks" {
   enable_irsa = true
 
   cluster_addons = {
-    coredns    = { most_recent = true }
-    kube-proxy = { most_recent = true }
-    vpc-cni    = { most_recent = true }
+    coredns    = { 
+      addon_version = "v1.11.4-eksbuild.2"
+    }
+    kube-proxy = {
+      addon_version = "v1.32.6-eksbuild.12"
+    }
+    vpc-cni    = { 
+      addon_version = "v1.20.4-eksbuild.2"
+    }
   }
   
   create_cloudwatch_log_group = false
@@ -85,8 +91,11 @@ resource "helm_release" "aws_lb_controller" {
   name       = "aws-load-balancer-controller"
   repository = "https://aws.github.io/eks-charts"
   chart      = "aws-load-balancer-controller"
-  version    = "1.7.1"
+  version    = "1.8.2"
   namespace  = "kube-system"
+  
+  disable_openapi_validation = true
+
 
   depends_on = [
     module.eks,
@@ -98,7 +107,7 @@ resource "helm_release" "aws_lb_controller" {
     clusterName = module.eks.cluster_name
     region      = var.aws_region
     vpcId       = data.terraform_remote_state.vpc.outputs.vpc_id
-
+ 
     serviceAccount = {
       create = true
       annotations = {
