@@ -49,8 +49,47 @@ def lambda_handler(event, context):
         hits = alert_data.get('hits', [])
 
         if not hits:
-            logger.info("No hits found in the alert data.")
-            return {"statusCode": 200, "body": "No data to insert"}
+            # Anomaly Detection 데이터 처리 로직 추가
+            if 'anomalyGrade' in alert_data:
+                logger.info("Anomaly Detection Alert Received")
+                
+                # AD 알림에서 필요한 필드 추출
+                ad_id = alert_data.get('detectorId', 'unknown-detector')
+                grade = alert_data.get('anomalyGrade', 0)
+                confidence = alert_data.get('confidence', 0)
+                
+                # timestamp는 AD 알림의 실행 시간 등을 사용하거나 현재 시간 사용
+                timestamp = datetime.now().strftime("%Y-%m-%dT%H:%M:%S+00:00")
+                
+                # Category Field(device_id) 추출 시도
+                # AD 설정에 따라 필드 위치가 다를 수 있으나, 일반적으로 집계 키(key)에 포함됨
+                # 예: "key": "device-001" 또는 복합 키일 수 있음.
+                device_id = alert_data.get('key', 'unknown-device') 
+                
+                # 가상의 hits 구조 생성 (백엔드 자바 DTO 구조에 맞게 Flat하게 변경)
+                hits = [{
+                    "device_id": device_id,
+                    "sensor_time": timestamp,
+                    "full_data": {
+                        "device_id": device_id,
+                        "timestamp": timestamp,
+                        "sensors": [], 
+                        "anomaly_data": {
+                            "grade": grade,
+                            "confidence": confidence,
+                            "detector_id": ad_id
+                        },
+                        "description": f"OpenSearch Anomaly Detection 감지 (Grade: {grade}, Confidence: {confidence})"
+                    }
+                }]
+                logger.info("Constructed fake hits for AD: %s", json.dumps(hits))
+                
+                # alert_data에 hits 주입하여 이후 로직(Backend 전송)이 정상 동작하게 함
+                alert_data['hits'] = hits
+                
+            else:
+                logger.info("No hits found in the alert data.")
+                return {"statusCode": 200, "body": "No data to insert"}
 
         # 4. Backend API에 AlarmOsRequest 형식으로 전송
         request_body = alert_data

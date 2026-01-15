@@ -16,7 +16,7 @@ aws_s3_bucket = "s3_name"
 mariadb_url      = "jdbc:mysql://HOST:PORT/DATABASE"
 mariadb_username = "username"
 mariadb_password = "password"
-jwt_secret_key   = "your-secret-key-change-this-in-production-min-256-bits
+jwt_secret_key   = "your-secret-key-change-this-in-production-min-256-bits"
 
 spring_mail_host = "smtp.gmail.com"
 spring_mail_username = "gmail-address"
@@ -24,4 +24,3 @@ spring_mail_password = "app-password"
 
 redis_channel  = "sensor_data"
 websocket_path = "/ws"
-

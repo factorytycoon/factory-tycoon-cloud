@@ -23,14 +23,14 @@ IoT Core → Lambda1 → ElastiCache (Redis)
   - 처리 대기 큐에 추가
 
 ### 2. cache-to-mongodb
-- **트리거**: EventBridge (5분마다)
+- **트리거**: EventBridge (2분마다)
 - **역할**: Redis 큐의 데이터를 MongoDB에 저장
-- **배치**: 100개씩 처리
+- **배치**: 최대 1000개씩 처리
 
 ### 3. cache-to-opensearch
-- **트리거**: EventBridge (5분마다)
+- **트리거**: iot-to-cache (비동기 Invoke)
 - **역할**: Redis 큐의 데이터를 OpenSearch에 저장
-- **배치**: 100개씩 처리
+- **배치**: 최대 1000개씩 처리
 
 ## Deployment
 
