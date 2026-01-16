@@ -100,3 +100,19 @@ variable "websocket_path" {
   type        = string
   default     = "/ws"
 }
+
+variable "spring_mail_host" {
+  description = "SMTP host for Spring Mail"
+  type        = string
+}
+
+variable "spring_mail_username" {
+  description = "SMTP username for Spring Mail"
+  type        = string
+}
+
+variable "spring_mail_password" {
+  description = "SMTP password for Spring Mail"
+  type        = string
+  sensitive   = true
+}

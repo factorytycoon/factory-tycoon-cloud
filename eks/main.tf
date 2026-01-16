@@ -5,7 +5,7 @@ module "eks" {
   version = "~> 20.0"
 
   cluster_name    = var.cluster_name
-  cluster_version = "1.32"
+  cluster_version = "1.33"
 
   vpc_id     = data.terraform_remote_state.vpc.outputs.vpc_id
   subnet_ids = data.terraform_remote_state.vpc.outputs.private_subnets
@@ -22,10 +22,10 @@ module "eks" {
 
   cluster_addons = {
     coredns    = { 
-      addon_version = "v1.11.4-eksbuild.2"
+      addon_version = "v1.12.1-eksbuild.2"
     }
     kube-proxy = {
-      addon_version = "v1.32.6-eksbuild.12"
+      addon_version = "v1.33.3-eksbuild.4"
     }
     vpc-cni    = { 
       addon_version = "v1.20.4-eksbuild.2"

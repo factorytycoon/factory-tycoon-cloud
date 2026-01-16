@@ -9,6 +9,9 @@ resource "kubernetes_config_map_v1" "sf_backend_config" {
     JWT_REFRESH_TTL_MS = var.jwt_refresh_ttl_ms
     AWS_REGION         = var.aws_region
     REDIS_PORT         = var.backend_redis_port
+    # Health check에서 mail 제외 (메일 인증 실패로 인한 pod 재시작 방지)
+    MANAGEMENT_ENDPOINT_HEALTH_GROUP_READINESS_INCLUDE = "readinessState,db,redis"
+    MANAGEMENT_HEALTH_MAIL_ENABLED                     = "false"
   }
 }
 

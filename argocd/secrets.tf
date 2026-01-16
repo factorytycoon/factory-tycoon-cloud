@@ -31,6 +31,9 @@ resource "kubernetes_secret_v1" "sf_backend_secrets" {
     MARIADB_PASSWORD = var.mariadb_password
     REDIS_HOST       = data.terraform_remote_state.elasticache.outputs.redis_primary_endpoint
     JWT_SECRET_KEY   = var.jwt_secret_key
+    SPRING_MAIL_HOST = var.spring_mail_host
+    SPRING_MAIL_USERNAME = var.spring_mail_username
+    SPRING_MAIL_PASSWORD = var.spring_mail_password
   }
 }
 

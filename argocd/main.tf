@@ -17,7 +17,7 @@ resource "helm_release" "argocd" {
         cm = {
           "resource.exclusions" = <<-EOT
             - apiGroups:
-              - "metrics.eks.amazonaws.com"
+              - "v1.metrics.eks.amazonaws.com"
               kinds:
               - "*"
               clusters:

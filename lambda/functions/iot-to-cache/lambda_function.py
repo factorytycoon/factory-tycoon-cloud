@@ -1,5 +1,6 @@
 import json
 import os
+import boto3
 import redis
  
 import time
@@ -16,7 +17,20 @@ redis_client = redis.Redis(
 #     decode_responses=True
 # )
 
- 
+lambda_client = boto3.client('lambda')
+
+def _invoke_async(function_name, payload):
+    if not function_name:
+        return
+    try:
+        lambda_client.invoke(
+            FunctionName=function_name,
+            InvocationType="Event",
+            Payload=payload,
+        )
+    except Exception as e:
+        print(f"Async invoke failed for {function_name}: {e}")
+
 
 def lambda_handler(event, context):
     """
@@ -100,6 +114,12 @@ def lambda_handler(event, context):
         # Redis Pub/Sub (실시간 WebSocket 브로드캐스트용 - 추가)
         redis_client.publish('sensor_data', message_body)
         # redis_client_local.publish('sensor_data', message_body)
+
+        # 5. 비동기 후속 처리 트리거 (Redis Stream 기반 배치 처리 유지)
+        _invoke_async(
+            os.environ.get('CACHE_TO_OPENSEARCH_FUNCTION_NAME'),
+            json.dumps(data).encode('utf-8'),
+        )
         
         print(f"Successfully stored data for {device_id} ({data_type})")
         
