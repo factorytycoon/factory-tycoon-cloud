@@ -1,0 +1,88 @@
+#!/bin/bash
+
+set -e  # 에러 발생 시 즉시 종료
+
+START_TIME=$SECONDS
+
+MODULES=("argocd" "lambda" "opensearch" "iot" "elasticache" "eks" "security-groups" "vpc")
+
+echo "=========================================="
+echo "Factory Tycoon Cloud destroy script (FIXED)"
+echo "=========================================="
+echo ""
+
+# 참고: VPC 리소스(NAT Gateway, NAT EIP, IGW, ENI 등)는 Terraform이 자동으로 올바른 순서로 삭제합니다.
+# 수동으로 사전 정리할 필요가 없으며, 오히려 Terraform 상태와 불일치를 일으킬 수 있습니다.
+# Terraform destroy 시 자동 처리 순서:
+#   1. Route Table Associations → 2. Route Tables → 3. NAT Gateway → 4. NAT EIP
+#   5. Internet Gateway → 6. Subnets → 7. VPC
+#
+# 원본 스크립트의 문제점:
+# - NAT Gateway가 존재하는 상태에서 NAT EIP를 해제하려고 시도 (실패)
+# - Terraform이 관리하는 ENI를 수동으로 삭제하려고 시도 (불필요 및 상태 불일치 가능)
+
+echo ""
+kubectl delete application factory-tycoon-ingress -n argocd 2>/dev/null || true
+
+echo "→ Wait: Ingress controller to remove ALB (takes ~30-60 seconds)"
+set +e
+for i in {1..60}; do
+  ALB_COUNT=$(aws ec2 describe-load-balancers --region ap-northeast-2 --query "LoadBalancers[?Tags[?Key=='elbv2.k8s.aws/cluster']].LoadBalancerArn | length(@)" 2>/dev/null || echo "0")
+  if [ "$ALB_COUNT" -eq "0" ]; then
+    echo "✓ ALB successfully removed"
+    break
+  fi
+  echo "  Waiting... ALB still exists ($ALB_COUNT found), waiting..."
+  sleep 2
+done
+set -e
+
+for module in "${MODULES[@]}"; do
+  echo "========== [$module] 제거 중... =========="
+  
+  if [ ! -d "$module" ]; then
+    echo "$module 디렉토리를 찾을 수 없습니다."
+    exit 1
+  fi
+  
+  cd "$module"
+  
+  # IoT 리소스 사전 정리
+  if [ "$module" = "iot" ]; then
+    echo "→ IoT attachment 사전 정리"
+    set +e
+    for policy in $(aws iot list-policies --region ap-northeast-2 --query 'policies[?starts_with(policyName, `ft-policy`)].policyName' --output text 2>/dev/null); do
+      for target in $(aws iot list-targets-for-policy --policy-name "$policy" --region ap-northeast-2 --query 'targets[]' --output text 2>/dev/null); do
+        aws iot detach-policy --policy-name "$policy" --target "$target" --region ap-northeast-2 2>/dev/null || true
+      done
+    done
+    for thing in $(aws iot list-things --region ap-northeast-2 --query 'things[?starts_with(thingName, `ft-`)].thingName' --output text 2>/dev/null); do
+      for principal in $(aws iot list-thing-principals --thing-name "$thing" --region ap-northeast-2 --query 'principals[]' --output text 2>/dev/null); do
+        aws iot detach-thing-principal --thing-name "$thing" --principal "$principal" --region ap-northeast-2 2>/dev/null || true
+      done
+    done
+    set -e
+  fi
+  
+  # terraform init
+  echo "→ terraform init"
+  terraform init -reconfigure
+  
+  # terraform destroy
+  echo "→ terraform destroy"
+  terraform destroy -auto-approve
+  
+  cd ..
+  echo "[$module] 제거 완료"
+  echo ""
+done
+
+ELAPSED=$((SECONDS - START_TIME))
+MINUTES=$((ELAPSED / 60))
+SECONDS_REMAINING=$((ELAPSED % 60))
+
+echo "=========================================="
+echo "destroy done"
+echo "총 소요시간: ${MINUTES}분 ${SECONDS_REMAINING}초"
+echo "=========================================="
+
