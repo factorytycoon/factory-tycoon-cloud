@@ -13,3 +13,9 @@ variable "project_name" {
   type    = string
   default = "ft"
 }
+
+variable "assets_bucket_name" {
+  type        = string
+  default     = "factory-tycoon"
+  description = "프로젝트 파일/모델링 파일을 저장할 S3 버킷 이름"
+}

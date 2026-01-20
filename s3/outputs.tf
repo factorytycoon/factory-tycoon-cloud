@@ -21,3 +21,13 @@ output "backend_config" {
   EOT
   description = "다른 모듈에서 사용할 backend 설정 예시"
 }
+
+output "assets_bucket_name" {
+  value       = aws_s3_bucket.project_assets.id
+  description = "프로젝트 파일/모델링 파일 S3 버킷 이름"
+}
+
+output "assets_bucket_arn" {
+  value       = aws_s3_bucket.project_assets.arn
+  description = "프로젝트 파일/모델링 파일 S3 버킷 ARN"
+}
