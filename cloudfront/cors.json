@@ -1,0 +1,17 @@
+[
+    {
+        "AllowedOrigins": [
+            "https://factorytycoon.net"
+        ],
+        "AllowedMethods": [
+            "*"
+        ],
+        "AllowedHeaders": [
+            "*"
+        ],
+        "ExposeHeaders": [
+            "ETag"
+        ],
+        "MaxAgeSeconds": 3000
+    }
+]
