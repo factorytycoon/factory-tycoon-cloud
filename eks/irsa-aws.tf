@@ -45,6 +45,26 @@ resource "aws_iam_policy" "aws_bedrock_access" {
   })
 }
 
+# ---------- IAM Policy (AWS Marketplace for Bedrock models) ----------
+resource "aws_iam_policy" "aws_marketplace_access" {
+  name        = "sf-backend-aws-marketplace-access"
+  description = "Allow AWS Marketplace subscription checks for Bedrock models"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "aws-marketplace:ViewSubscriptions",
+          "aws-marketplace:Subscribe"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
 # ---------- IAM Policy (OpenSearch Access) ----------
 resource "aws_iam_policy" "aws_opensearch_access" {
   name        = "sf-backend-aws-opensearch-access"
@@ -74,6 +94,7 @@ module "aws_irsa" {
   role_policy_arns = {
     s3         = aws_iam_policy.aws_s3_read.arn
     bedrock    = aws_iam_policy.aws_bedrock_access.arn
+    marketplace = aws_iam_policy.aws_marketplace_access.arn
     opensearch = aws_iam_policy.aws_opensearch_access.arn
   }
 
