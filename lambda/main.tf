@@ -93,7 +93,6 @@ resource "aws_lambda_function" "iot_to_cache" {
       REDIS_PORT           = data.terraform_remote_state.elasticache.outputs.redis_port
       REDIS_ENDPOINT_LOCAL       = var.redis_endpoint_local
       REDIS_PORT_LOCAL           = var.redis_port_local
-      CACHE_TO_OPENSEARCH_FUNCTION_NAME = aws_lambda_function.cache_to_opensearch.function_name
     }
   }
 
@@ -249,9 +248,19 @@ resource "aws_cloudwatch_event_rule" "every_2_minutes" {
   schedule_expression = "rate(2 minutes)"
 }
 
+resource "aws_cloudwatch_event_rule" "every_1_minute" {
+  name                = "${var.project}-every-1m"
+  schedule_expression = "rate(1 minute)"
+}
+
 resource "aws_cloudwatch_event_target" "cache_to_mongodb_target" {
   rule = aws_cloudwatch_event_rule.every_2_minutes.name
   arn  = aws_lambda_function.cache_to_mongodb.arn
+}
+
+resource "aws_cloudwatch_event_target" "cache_to_opensearch_target" {
+  rule = aws_cloudwatch_event_rule.every_1_minute.name
+  arn  = aws_lambda_function.cache_to_opensearch.arn
 }
 
 resource "aws_lambda_permission" "allow_eventbridge_cache_mongodb" {
@@ -260,4 +269,12 @@ resource "aws_lambda_permission" "allow_eventbridge_cache_mongodb" {
   function_name = aws_lambda_function.cache_to_mongodb.function_name
   principal     = "events.amazonaws.com"
   source_arn    = aws_cloudwatch_event_rule.every_2_minutes.arn
+}
+
+resource "aws_lambda_permission" "allow_eventbridge_cache_opensearch" {
+  statement_id  = "AllowExecutionFromEventBridgeOpenSearch"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.cache_to_opensearch.function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.every_1_minute.arn
 }
