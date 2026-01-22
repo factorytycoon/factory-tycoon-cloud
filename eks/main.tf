@@ -52,6 +52,41 @@ module "eks" {
   enable_cluster_creator_admin_permissions = true
 }
 
+module "eks_aws_auth" {
+  source  = "terraform-aws-modules/eks/aws//modules/aws-auth"
+  version = "~> 20.0"
+
+  manage_aws_auth_configmap = true
+
+  aws_auth_roles = [
+    {
+      rolearn  = module.eks.eks_managed_node_groups["backend_group"].iam_role_arn
+      username = "system:node:{{EC2PrivateDNSName}}"
+      groups   = ["system:bootstrappers", "system:nodes"]
+    }
+  ]
+
+  aws_auth_users = [
+    {
+      userarn  = "arn:aws:iam::809808214826:user/mwlee"
+      username = "mwlee"
+      groups   = ["system:masters"]
+    },
+    {
+      userarn  = "arn:aws:iam::809808214826:root"
+      username = "root"
+      groups   = ["system:masters"]
+    },
+    {
+      userarn  = "arn:aws:iam::809808214826:user/lyj"
+      username = "lyj"
+      groups   = ["system:masters"]
+    }
+  ]
+
+  depends_on = [module.eks]
+}
+
 
 # IAM Policy for ALB Controller (AWS 공식 정책 다운로드)
 
@@ -132,4 +167,3 @@ resource "null_resource" "update_kubeconfig" {
     command = "aws eks update-kubeconfig --name ${module.eks.cluster_name} --region ${var.aws_region}"
   }
 }
-
